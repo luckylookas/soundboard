@@ -15,9 +15,9 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Configuration
 
 @EnableAutoConfiguration
-@SpringBootTest(classes = [OutputRepository::class, TDDTest.TestConfig::class, Controller::class])
+@SpringBootTest(classes = [OutputRepository::class, OutputTest.TestConfig::class, OutputController::class])
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
-class TDDTest {
+class OutputTest {
 
     @Configuration
     class TestConfig(val outputRepository: OutputRepository) {
@@ -32,7 +32,7 @@ class TDDTest {
     private lateinit var mp3Player: Mp3Player
 
     @Autowired
-    private lateinit var controller: Controller
+    private lateinit var controller: OutputController
 
     @Test
     fun setup_checkSetup_initialStateIsAsExpected() {
@@ -48,7 +48,7 @@ class TDDTest {
     @Test
     fun relabel_relabelFront_labelIsAssigned() {
         controller.relabel("front", "ambience")
-        assertThat(controller.getOutputs()["front"]?.labels).containsExactly("ambience")
+        assertThat(controller.getOutputs()["front"]?.label).isEqualTo("ambience")
     }
 
     @Test
