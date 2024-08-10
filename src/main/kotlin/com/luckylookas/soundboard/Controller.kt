@@ -3,6 +3,7 @@ package com.luckylookas.soundboard
 import com.luckylookas.soundboard.persistence.Output
 import com.luckylookas.soundboard.persistence.OutputRepository
 import jakarta.annotation.PostConstruct
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.web.bind.annotation.*
 
 class PlayRequest(val file: String)
@@ -12,26 +13,15 @@ class OutputStateDto(val name: String, val labels: List<String>, val state: STAT
 @RequestMapping("/outputs")
 class Controller(val mp3Player: Mp3Player, val outputRepository: OutputRepository) {
 
-    @PostConstruct
-    fun initDb() {
-        reloadMixers(false)
-    }
-
     @PostMapping("/reload")
-    fun reloadMixers(@RequestParam(name = "cleanup", defaultValue = "false", required = false) cleanup: Boolean )  {
-        val availableMixers =  mp3Player.availableMixers().map { encodeMixerName(it.name) }
-
-        if (cleanup) {
-            outputRepository.findAll().filter { !availableMixers.contains(it.mixer) }.forEach{ outputRepository.delete(it) }
-        }
-
-        availableMixers.forEach {
-            outputRepository.findByMixerEqualsIgnoreCase(encodeMixerName(it))?: outputRepository.save(Output(mixer = it, state = STATE.STOPPED))
-        }
-    }
+    fun reloadMixers(@RequestParam(name = "cleanup", defaultValue = "false", required = false) cleanup: Boolean ) = mp3Player.reloadOutputs(cleanup)
 
     @PostMapping("/{name}/label/{label}")
     fun relabel(@PathVariable("name") name: String, @PathVariable("label") label: String) {
+        if (outputRepository.findByLabelsCsvContainingIgnoreCaseOrMixerEqualsIgnoreCase(label, label) != null) {
+            throw IllegalArgumentException("Duplicate label '$label'")
+        }
+
         (outputRepository.findByMixerEqualsIgnoreCase(name) ?: Output(name)).also {
             it.labelsCsv = "${it.labelsCsv},$label"
             outputRepository.save(it)
@@ -56,19 +46,19 @@ class Controller(val mp3Player: Mp3Player, val outputRepository: OutputRepositor
         @RequestParam(value = "loop", required = false, defaultValue = "false") loop: Boolean
     ) =
         outputRepository.findByLabelsCsvContainingIgnoreCaseOrMixerEqualsIgnoreCase(label, label)?.also {
-            mp3Player.play(it.mixer, file.file, loop)
+            mp3Player.play(it.mixer, file.file, volume, loop)
         }
 
     @PostMapping("/{label}/volume/{volume}")
     fun volume(@PathVariable("label") label: String, @PathVariable("volume") volume: Int) =
         outputRepository.findByLabelsCsvContainingIgnoreCaseOrMixerEqualsIgnoreCase(label, label)?.also {
-            mp3Player.setVolume(it.mixer, volume)
+            mp3Player.setVolume(it.mixer, volume.coerceAtMost(100).coerceAtLeast(1))
         }
 
     @PostMapping("/{label}/identify")
-    fun play(@PathVariable("label") label: String) =
+    fun identify(@PathVariable("label") label: String) =
         outputRepository.findByLabelsCsvContainingIgnoreCaseOrMixerEqualsIgnoreCase(label, label)?.also {
-            mp3Player.play(it.mixer, "test", false)
+            mp3Player.play(it.mixer, "test", 100,false)
         }
 
     @PostMapping("/{label}/stop")

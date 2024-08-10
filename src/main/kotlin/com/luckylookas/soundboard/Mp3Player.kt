@@ -1,5 +1,6 @@
 package com.luckylookas.soundboard
 
+import com.luckylookas.soundboard.persistence.Output
 import com.luckylookas.soundboard.persistence.OutputRepository
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
@@ -12,11 +13,8 @@ import org.springframework.stereotype.Component
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import javax.sound.sampled.*
-import kotlin.streams.toList
 
 enum class STATE {
     PLAYING,
@@ -27,9 +25,26 @@ enum class STATE {
 fun encodeMixerName(name: String): String = name.replace(" ", "").lowercase()
 
 @Component
-class Mp3Player(val outputsRepository: OutputRepository , @Value("\${staticdir}") val staticdir: String) {
+class Mp3Player(val outputRepository: OutputRepository , @Value("\${staticdir}") val staticdir: String) {
 
     val backgroundOpsScope = CoroutineScope(SupervisorJob())
+
+    @PostConstruct
+    fun initDb() {
+      reloadOutputs(false)
+    }
+
+    fun reloadOutputs(cleanup: Boolean) {
+        val availableMixers =  availableMixers().map { encodeMixerName(it.name) }
+
+        if (cleanup) {
+            outputRepository.findAll().filter { !availableMixers.contains(it.mixer) }.forEach{ outputRepository.delete(it) }
+        }
+
+        availableMixers.forEach {
+            outputRepository.findByMixerEqualsIgnoreCase(encodeMixerName(it))?: outputRepository.save(Output(mixer = it, state = STATE.STOPPED))
+        }
+    }
 
     @PreDestroy
     fun destroy() {
@@ -56,35 +71,45 @@ class Mp3Player(val outputsRepository: OutputRepository , @Value("\${staticdir}"
         .filter { !it.name.lowercase().contains("primary") }
         .toList()
 
-    fun play(output: String, file: String, loop: Boolean) {
+    fun play(output: String, file: String, volume: Int, loop: Boolean) {
         availableMixers().firstOrNull { encodeMixerName(it.name) == encodeMixerName(output) }?.also { mixer ->
-           (outputsRepository.findByMixerEqualsIgnoreCase(output)?.also {
-                state = STATE.PLAYING  })
+            (outputRepository.findByMixerEqualsIgnoreCase(output)?.also {
+                it.state = STATE.PLAYING
+                outputRepository.save(it)
+           })
 
             backgroundOpsScope.launch(Dispatchers.IO) {
+                println("playing $staticdir$file.mp3")
                 getAudioInputStream(FileInputStream("$staticdir$file.mp3")).use {
                     val clip = AudioSystem.getClip(mixer)
                     clip.open(it)
                     clip.loop(if (loop) Clip.LOOP_CONTINUOUSLY else 0)
                     clip.addLineListener { event ->
                         if (event.type == LineEvent.Type.CLOSE) {
-                            outputsRepository.findByMixerEqualsIgnoreCase(output)?.state = STATE.STOPPED
+                            outputRepository.findByMixerEqualsIgnoreCase(output)?.also {
+                                it.state = STATE.STOPPED
+                                outputRepository.save(it)
+                            }
                         }
                     }
+                    setVolume(output, volume)
                     clip.start()
                 }
             }
         }
     }
 
-    fun stop(name: String) {
-        availableMixers().firstOrNull { encodeMixerName(it.name) == encodeMixerName(name) }?.also { mixer ->
+    fun stop(output: String) {
+        availableMixers().firstOrNull { encodeMixerName(it.name) == encodeMixerName(output) }?.also { mixer ->
             AudioSystem.getMixer(mixer).sourceLines.forEach {
                 with((it as DataLine)) {
                     stop()
                     drain()
                     close()
-                    outputsRepository.findByMixerEqualsIgnoreCase(name)?.state = STATE.STOPPED
+                    outputRepository.findByMixerEqualsIgnoreCase(output)?.also {
+                        it.state = STATE.STOPPED
+                        outputRepository.save(it)
+                    }
                 }
             }
         }
