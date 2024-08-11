@@ -9,22 +9,21 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Configuration
 
 @EnableAutoConfiguration
 @SpringBootTest(classes = [OutputRepository::class, OutputTest.TestConfig::class, OutputController::class])
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 class OutputTest {
 
     @Configuration
     class TestConfig(val outputRepository: OutputRepository) {
         @PostConstruct
         fun init() {
-            outputRepository.save(Output(mixer = "front", state = STATE.STOPPED))
+            outputRepository.save(Output(mixer = "front", label = "ambience", state = STATE.STOPPED))
             outputRepository.save(Output(mixer = "back", state = STATE.STOPPED))
+
         }
     }
 
@@ -39,6 +38,7 @@ class OutputTest {
         assertThat(controller).isNotNull
         assertThat(mp3Player).isNotNull
         assertThat(controller.mp3Player == mp3Player).isTrue
+        assertThat(controller.getOutputs()["front"]?.label).isEqualTo("ambience")
 
         val outputs = controller.getOutputs()
         assertThat(outputs).containsOnlyKeys("front", "back")
@@ -46,14 +46,13 @@ class OutputTest {
     }
 
     @Test
-    fun relabel_relabelFront_labelIsAssigned() {
-        controller.relabel("front", "ambience")
-        assertThat(controller.getOutputs()["front"]?.label).isEqualTo("ambience")
+    fun relabel_relabel_labelIsAssigned() {
+        controller.relabel("back", "music")
+        assertThat(controller.getOutputs()["back"]?.label).isEqualTo("music")
     }
 
     @Test
     fun relabel_relabelFrontWithExistingLabel_rejected() {
-        controller.relabel("front", "ambience")
         assertThatThrownBy({
             controller.relabel(
                 "back",
@@ -64,28 +63,24 @@ class OutputTest {
 
     @Test
     fun play_anyArgs_argsPassedToMp3Player() {
-        controller.relabel("front", "ambience")
         controller.play(label = "ambience", volume = 25, loop = true, file = PlayRequest("woodlands"))
         verify(mp3Player).play(output = "front", file = "woodlands", 25, loop = true)
     }
 
     @Test
     fun stop_anyArgs_argsPassedToMp3Player() {
-        controller.relabel("front", "ambience")
         controller.stop(label = "ambience")
         verify(mp3Player).stop(output = "front")
     }
 
     @Test
     fun setVolume_validArgs_argsPassedToMp3Player() {
-        controller.relabel("front", "ambience")
         controller.volume(label = "ambience", volume = 25)
         verify(mp3Player).setVolume(output = "front", percent = 25)
     }
 
     @Test
     fun setVolume_outOfBoundsArgs_argsCappedAndPassedToMp3Player() {
-        controller.relabel("front", "ambience")
         controller.volume(label = "ambience", volume = 2000)
         verify(mp3Player).setVolume(output = "front", percent = 100)
         controller.volume(label = "ambience", volume = 0)
@@ -100,7 +95,6 @@ class OutputTest {
 
     @Test
     fun identify_existingLabel_playsTestSound() {
-        controller.relabel("front", "ambience")
         controller.identify(label = "ambience")
         verify(mp3Player).play(output = "front", file = "test", 100, loop = false)
     }

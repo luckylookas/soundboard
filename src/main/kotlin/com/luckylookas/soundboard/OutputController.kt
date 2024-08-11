@@ -2,6 +2,7 @@ package com.luckylookas.soundboard
 
 import com.luckylookas.soundboard.persistence.Output
 import com.luckylookas.soundboard.persistence.OutputRepository
+import jakarta.transaction.Transactional
 import org.springframework.web.bind.annotation.*
 
 class PlayRequest(val file: String)
@@ -9,6 +10,7 @@ class OutputStateDto(val name: String, val label: String, val state: STATE)
 
 @RestController
 @RequestMapping("/outputs")
+@Transactional
 class OutputController(val mp3Player: Mp3Player, val outputRepository: OutputRepository) {
 
     @PostMapping("/reload")

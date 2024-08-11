@@ -8,9 +8,14 @@ import org.springframework.stereotype.Repository
 
 @Entity
 class Scene(
-    @Column
+
+    @Column(nullable = false)
     @Id
-    val name: String,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Int? = null,
+
+    @Column(unique = true, nullable = false)
+    var name: String,
 
     @OneToMany(cascade = [(CascadeType.ALL)], orphanRemoval = true, fetch = FetchType.EAGER)
     val sceneMappings: MutableSet<SceneMapping> = HashSet()
@@ -31,10 +36,10 @@ class SceneMapping(
     @Column(nullable = false)
     val volume: Int,
 
-    @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     val scene: Scene,
 
-    @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     val output: Output,
 )
 
@@ -52,7 +57,7 @@ class Output(
     @Column(nullable = false)
     var state: STATE = STATE.UNAVAILABLE,
 
-    @OneToMany(cascade = [(CascadeType.ALL)], orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
     val sceneMappings: MutableSet<SceneMapping> = HashSet()
 
 )
@@ -64,6 +69,6 @@ interface OutputRepository: CrudRepository<Output, String> {
 }
 
 @Repository
-interface SceneRepository: CrudRepository<Scene, String> {
+interface SceneRepository: CrudRepository<Scene, Int> {
   fun findByNameEqualsIgnoreCase(name: String): Scene?
 }
