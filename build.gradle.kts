@@ -19,11 +19,17 @@ java {
 
 repositories {
     mavenCentral()
+    maven(
+        url="https://maven.scijava.org/content/groups/public"
+    )
 }
 
 dependencies {
+    implementation("com.github.sealedtx:java-youtube-downloader:3.2.3")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     runtimeOnly("com.h2database:h2")
+    implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
+
     implementation("com.googlecode.soundlibs:mp3spi:1.9.5.4")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

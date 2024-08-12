@@ -7,6 +7,8 @@ import jakarta.transaction.Transactional
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoMoreInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
@@ -49,17 +51,22 @@ class SceneTest {
             SceneMappingDto(file = "luteConcert", output = "music", loop = false, volume = 40)
         )
 
-        controller.setScene(SceneDto(name = "tavern", mappings = mappings), "tavern")
+        val hotbar = setOf(
+            HotbarDto("sting", volume = 100, loop = false),
+            HotbarDto("distantThunder", volume = 50, loop = false),
+        )
+
+        controller.setScene(SceneDto(name = "tavern", mappings = mappings, hotbar = hotbar), "tavern")
 
         val ret = controller.getScene("tavern")!!
 
         assertThat(ret.name).isEqualTo("tavern")
         assertThat(ret.mappings).containsExactlyInAnyOrderElementsOf(mappings)
+        assertThat(ret.hotbar).containsExactlyInAnyOrderElementsOf(hotbar)
     }
 
     @Test
     fun setScene_renameScene_updatesSceneNameAndMappings() {
-
         controller.setScene(
             SceneDto(
                 name = "tavern",
@@ -81,5 +88,21 @@ class SceneTest {
 
         assertThat(ret.name).isEqualTo("newName")
         assertThat(ret.mappings).containsExactlyInAnyOrderElementsOf(mappings)
+    }
+
+    @Test
+    fun playScene_validInput_classPlayOnMp3Player() {
+        val mappings = setOf(
+            SceneMappingDto(file = "chatter", output = "ambience", loop = true, volume = 25),
+            SceneMappingDto(file = "luteConcert", output = "music", loop = false, volume = 40)
+        )
+
+        controller.setScene(SceneDto(name = "tavern", mappings = mappings), "tavern")
+        controller.play("tavern")
+
+        verify(mp3Player).play("front", "chatter", 25, true)
+        verify(mp3Player).play("back", "luteConcert", 40, false)
+        verifyNoMoreInteractions(mp3Player)
+
     }
 }

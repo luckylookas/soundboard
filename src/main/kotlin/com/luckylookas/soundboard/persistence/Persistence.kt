@@ -5,7 +5,6 @@ import jakarta.persistence.*
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 
-
 @Entity
 class Scene(
 
@@ -18,8 +17,27 @@ class Scene(
     var name: String,
 
     @OneToMany(cascade = [(CascadeType.ALL)], orphanRemoval = true, fetch = FetchType.EAGER)
-    val sceneMappings: MutableSet<SceneMapping> = HashSet()
+    val sceneMappings: MutableSet<SceneMapping> = HashSet(),
 
+    @OneToMany(cascade = [(CascadeType.ALL)], orphanRemoval = true, fetch = FetchType.EAGER)
+    val hotbar: MutableSet<HotBarEntry> = HashSet()
+
+)
+
+@Entity
+class HotBarEntry(
+    @Column(nullable = false)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Int? = null,
+    @Column(nullable = false)
+    val file: String,
+    @Column(nullable = false)
+    val loop: Boolean,
+    @Column(nullable = false)
+    val volume: Int,
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    val scene: Scene?,
 )
 
 @Entity
@@ -42,7 +60,6 @@ class SceneMapping(
     @ManyToOne(fetch = FetchType.EAGER)
     val output: Output,
 )
-
 
 @Entity
 class Output(

@@ -2,6 +2,7 @@ package com.luckylookas.soundboard
 
 import com.luckylookas.soundboard.persistence.Output
 import com.luckylookas.soundboard.persistence.OutputRepository
+import jakarta.persistence.Query
 import jakarta.transaction.Transactional
 import org.springframework.web.bind.annotation.*
 
@@ -66,4 +67,13 @@ class OutputController(val mp3Player: Mp3Player, val outputRepository: OutputRep
         outputRepository.findByLabelEqualsIgnoreCaseOrMixerEqualsIgnoreCase(label, label)?.also {
             mp3Player.stop(it.mixer)
         }
+
+    @PutMapping("/stop")
+    fun stopAll() =
+        outputRepository.findAll().forEach {
+            mp3Player.stop(it.mixer)
+        }
+
+    @GetMapping("/files")
+    fun findFile(@RequestParam("query") query: String): Collection<String> = mp3Player.findFiles(query)
 }

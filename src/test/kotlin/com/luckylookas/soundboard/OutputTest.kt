@@ -98,4 +98,10 @@ class OutputTest {
         controller.identify(label = "ambience")
         verify(mp3Player).play(output = "front", file = "test", 100, loop = false)
     }
+
+    @Test
+    fun findFiles_query_passedArgsToMp3Player() {
+        controller.findFile(query = "ambience")
+        verify(mp3Player).findFiles("ambience")
+    }
 }

@@ -13,8 +13,11 @@ import org.springframework.stereotype.Component
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.*
 import javax.sound.sampled.*
+import kotlin.io.path.name
 
 enum class STATE {
     PLAYING,
@@ -80,7 +83,10 @@ class Mp3Player(val outputRepository: OutputRepository , @Value("\${staticdir}")
 
             backgroundOpsScope.launch(Dispatchers.IO) {
                 println("playing $staticdir$file.mp3")
-                getAudioInputStream(FileInputStream("$staticdir$file.mp3")).use {
+
+
+                getAudioInputStream(FileInputStream("C:\\untis\\dev\\soundboard\\src\\main\\resources\\downloaded.m4a")).use {
+              //  getAudioInputStream(FileInputStream("$staticdir$file.mp3")).use {
                     val clip = AudioSystem.getClip(mixer)
                     clip.open(it)
                     clip.loop(if (loop) Clip.LOOP_CONTINUOUSLY else 0)
@@ -132,6 +138,10 @@ class Mp3Player(val outputRepository: OutputRepository , @Value("\${staticdir}")
 
         return AudioSystem.getAudioInputStream(format, audioInputStream)
     }
+
+    fun findFiles(query: String): List<String> =
+        Files.find(Path.of(staticdir), 0, { path, _ -> path.fileName.name.lowercase().startsWith(query.lowercase()) && path.fileName.name.endsWith(".m3") }).map { it.fileName.name }.toList()
+
 
 }
 
