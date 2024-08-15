@@ -86,10 +86,21 @@ class SceneController(
         }
 
     @PutMapping("/{name}/play")
-    fun play(@PathVariable("name") name: String) =
+    fun play(@PathVariable("name") name: String) {
+        mp3Player.destroy()
         sceneRepository.findByNameEqualsIgnoreCase(name)?.also {
             it.sceneMappings.forEach { mapping ->
                 mp3Player.play(mapping.output.mixer, mapping.file, mapping.volume, mapping.loop)
+            }
+        }
+    }
+
+
+    @PutMapping("/{name}/stop")
+    fun stop(@PathVariable("name") name: String) =
+        sceneRepository.findByNameEqualsIgnoreCase(name)?.also {
+            it.sceneMappings.forEach { mapping ->
+                mp3Player.stop(mapping.output.mixer)
             }
         }
 

@@ -53,7 +53,7 @@ class Mp3Player(val outputRepository: OutputRepository , @Value("\${staticdir}")
     fun destroy() {
         availableMixers().forEach { mixer ->
             AudioSystem.getMixer(mixer).sourceLines.forEach {
-                with((it as SourceDataLine)) {
+                with((it as DataLine)) {
                     stop()
                     drain()
                     close()
@@ -82,14 +82,13 @@ class Mp3Player(val outputRepository: OutputRepository , @Value("\${staticdir}")
            })
 
             backgroundOpsScope.launch(Dispatchers.IO) {
-                println("playing $staticdir$file.mp3")
-
-
-                getAudioInputStream(FileInputStream("C:\\untis\\dev\\soundboard\\src\\main\\resources\\downloaded.m4a")).use {
-              //  getAudioInputStream(FileInputStream("$staticdir$file.mp3")).use {
+                getAudioInputStream(FileInputStream("$staticdir$file.mp3")).use {
+                    stop(mixer.name)
                     val clip = AudioSystem.getClip(mixer)
+
                     clip.open(it)
                     clip.loop(if (loop) Clip.LOOP_CONTINUOUSLY else 0)
+                    setVolume(output, volume)
                     clip.addLineListener { event ->
                         if (event.type == LineEvent.Type.CLOSE) {
                             outputRepository.findByMixerEqualsIgnoreCase(output)?.also {
@@ -98,7 +97,6 @@ class Mp3Player(val outputRepository: OutputRepository , @Value("\${staticdir}")
                             }
                         }
                     }
-                    setVolume(output, volume)
                     clip.start()
                 }
             }

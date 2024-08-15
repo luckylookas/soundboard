@@ -1,0 +1,249 @@
+GET localhost:8080/outputs
+Content-Type: application/json
+
+###
+
+POST localhost:8080/outputs/lautsprecher(realtekhighdefinitionaudio)/label/speaker
+Content-Type: application/json
+
+###
+
+POST localhost:8080/outputs/speaker/stop
+
+###
+
+GET localhost:8080/scene/coast_relaxed
+
+###
+
+PUT localhost:8080/scene/coast_relaxed/play
+
+<> 2024-08-13T191358.500.json
+<> 2024-08-13T191312.500.json
+<> 2024-08-13T191050.200.json
+<> 2024-08-13T191023.200.json
+<> 2024-08-13T191007.200.json
+<> 2024-08-13T190951.200.json
+<> 2024-08-13T190929.200.json
+<> 2024-08-13T190911.200.json
+<> 2024-08-13T190757.200.json
+
+###
+
+PUT localhost:8080/scene/coast_relaxed
+Content-Type: application/json
+
+{
+  "name": "coast_relaxed",
+  "hotbar": [
+    {
+      "file": "bits/door_knocking",
+      "loop": false,
+      "volume": 100
+    }
+  ],
+  "mappings": [
+    {
+      "file": "music/cozy_Jazz",
+      "output": "black",
+      "loop": true,
+      "volume": 70
+    },
+    {
+      "file": "ambience/coastal",
+      "output": "green",
+      "loop": true,
+      "volume": 60
+    }
+  ]
+
+}
+
+<> 2024-08-13T191842.500.json
+
+###
+
+PUT localhost:8080/scene/town_inside_investigation
+Content-Type: application/json
+
+{
+  "name": "town_inside_investigation",
+  "hotbar": [
+    {
+      "file": "bits/door_knocking",
+      "loop": false,
+      "volume": 100
+    }
+  ],
+  "mappings": [
+    {
+      "file": "music/investigation",
+      "output": "black",
+      "loop": true,
+      "volume": 65
+    },
+    {
+      "file": "ambience/suburbs_day",
+      "output": "green",
+      "loop": true,
+      "volume": 60
+    }
+  ]
+
+}
+
+###
+
+PUT localhost:8080/scene/cozy_place
+Content-Type: application/json
+
+{
+  "name": "cozy_place",
+  "hotbar": [
+    {
+      "file": "bits/door_knocking",
+      "loop": false,
+      "volume": 100
+    }
+  ],
+  "mappings": [
+    {
+      "file": "music/sunny_place",
+      "output": "black",
+      "loop": true,
+      "volume": 65
+    }
+  ]
+
+}
+
+
+###
+
+PUT localhost:8080/scene/rain_relaxed
+Content-Type: application/json
+
+{
+  "name": "rain_relaxed",
+  "hotbar": [
+    {
+      "file": "bits/door_knocking",
+      "loop": false,
+      "volume": 100
+    }
+  ],
+  "mappings": [
+    {
+      "file": "music/cozy_jazz",
+      "output": "black",
+      "loop": true,
+      "volume": 65
+    },
+    {
+      "file": "ambience/rain",
+      "output": "green",
+      "loop": true,
+      "volume": 70
+    }
+  ]
+
+}
+
+
+###
+
+
+PUT localhost:8080/scene/boat_outside_relaxed
+Content-Type: application/json
+
+{
+  "name": "boat_outside_relaxed",
+  "hotbar": [
+    {
+      "file": "bits/door_knocking",
+      "loop": false,
+      "volume": 100
+    }
+  ],
+  "mappings": [
+    {
+      "file": "music/cozy_jazz",
+      "output": "black",
+      "loop": true,
+      "volume": 55
+    },
+    {
+      "file": "ambience/boat_outside",
+      "output": "green",
+      "loop": true,
+      "volume": 80
+    }
+  ]
+
+}
+
+###
+
+
+PUT localhost:8080/scene/boat_outside_action
+Content-Type: application/json
+
+{
+  "name": "boat_outside_action",
+  "hotbar": [
+    {
+      "file": "bits/door_knocking",
+      "loop": false,
+      "volume": 100
+    }
+  ],
+  "mappings": [
+    {
+      "file": "music/chase",
+      "output": "black",
+      "loop": true,
+      "volume": 70
+    },
+    {
+      "file": "ambience/boat_outside",
+      "output": "green",
+      "loop": true,
+      "volume": 70
+    }
+  ]
+
+}
+
+<> 2024-08-13T191236.500.json
+
+###
+
+
+PUT localhost:8080/scene/boat_investigation
+Content-Type: application/json
+
+{
+  "name": "boat_investigation",
+  "hotbar": [
+    {
+      "file": "bits/door_knocking",
+      "loop": false,
+      "volume": 100
+    }
+  ],
+  "mappings": [
+    {
+      "file": "music/investigation",
+      "output": "black",
+      "loop": true,
+      "volume": 70
+    },
+    {
+      "file": "ambience/boat_outside",
+      "output": "green",
+      "loop": true,
+      "volume": 70
+    }
+  ]
+
+}
