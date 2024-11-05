@@ -25,6 +25,39 @@ class Scene(
 )
 
 @Entity
+class SoundFileCollection(
+
+    @Column(nullable = false)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Int? = null,
+
+    @Column(unique = true, nullable = false)
+    var name: String,
+
+    @OneToMany(cascade = [(CascadeType.ALL)], orphanRemoval = true, fetch = FetchType.LAZY)
+    val soundFiles: MutableSet<SoundFile> = HashSet()
+)
+
+@Entity
+class SoundFile(
+    @Column(nullable = false)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Int? = null,
+
+    @Column(unique = true, nullable = false)
+    var name: String,
+
+    @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY)
+    val collection: SoundFileCollection,
+
+    @OneToMany(fetch = FetchType.LAZY)
+    val sceneMappings:  MutableSet<SceneMapping> = HashSet()
+)
+
+
+@Entity
 class HotBarEntry(
     @Column(nullable = false)
     @Id
@@ -48,8 +81,6 @@ class SceneMapping(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int? = null,
     @Column(nullable = false)
-    val file: String,
-    @Column(nullable = false)
     val loop: Boolean,
     @Column(nullable = false)
     val volume: Int,
@@ -59,6 +90,9 @@ class SceneMapping(
 
     @ManyToOne(fetch = FetchType.EAGER)
     val output: Output,
+
+    @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    val file: SoundFile,
 )
 
 @Entity
@@ -88,4 +122,19 @@ interface OutputRepository: CrudRepository<Output, String> {
 @Repository
 interface SceneRepository: CrudRepository<Scene, Int> {
   fun findByNameEqualsIgnoreCase(name: String): Scene?
+}
+
+@Repository
+interface SoundFileRepository: CrudRepository<SoundFile, Int> {
+    fun findByNameEqualsIgnoreCaseAndCollectionNameEqualsIgnoreCase(name: String, collection: String): SoundFile?
+    fun findAllByNameStartingWithOrderByNameAsc(name: String): List<SoundFile>
+
+    companion object {
+        fun getTestFile() = SoundFile(collection = SoundFileCollection(name = "test"), name = "test")
+    }
+}
+
+@Repository
+interface SoundFileCollectionRepository: CrudRepository<SoundFileCollection, Int> {
+    fun findByNameEqualsIgnoreCase(name: String): SoundFileCollection?
 }

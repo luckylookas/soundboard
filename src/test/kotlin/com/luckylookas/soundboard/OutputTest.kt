@@ -1,8 +1,8 @@
 package com.luckylookas.soundboard
 
-import com.luckylookas.soundboard.persistence.Output
-import com.luckylookas.soundboard.persistence.OutputRepository
+import com.luckylookas.soundboard.persistence.*
 import jakarta.annotation.PostConstruct
+import jakarta.transaction.Transactional
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -13,19 +13,24 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Configuration
 
+@Transactional
 @EnableAutoConfiguration
-@SpringBootTest(classes = [OutputRepository::class, OutputTest.TestConfig::class, OutputController::class])
+@SpringBootTest(classes = [OutputRepository::class, OutputTest.TestConfig::class, OutputController::class, SoundFileRepository::class, SoundFileCollectionRepository::class])
 class OutputTest {
 
     @Configuration
-    class TestConfig(val outputRepository: OutputRepository) {
+    @Transactional
+    class TestConfig(val outputRepository: OutputRepository, val soundFileRepository: SoundFileRepository, val soundFileCollectionRepository: SoundFileCollectionRepository) {
         @PostConstruct
         fun init() {
             outputRepository.save(Output(mixer = "front", label = "ambience", state = STATE.STOPPED))
             outputRepository.save(Output(mixer = "back", state = STATE.STOPPED))
-
+            soundFileRepository.save(SoundFile(name = "woodlands", collection = SoundFileCollection(name = "ambience")))
         }
     }
+
+    @Autowired
+    private lateinit var soundFileRepository: SoundFileRepository
 
     @MockBean
     private lateinit var mp3Player: Mp3Player
@@ -63,8 +68,8 @@ class OutputTest {
 
     @Test
     fun play_anyArgs_argsPassedToMp3Player() {
-        controller.play(label = "ambience", volume = 25, loop = true, file = PlayRequest("woodlands"))
-        verify(mp3Player).play(output = "front", file = "woodlands", 25, loop = true)
+        controller.play(label = "ambience", volume = 25, loop = true, file = SoundFileDto("woodlands", "ambience"))
+        verify(mp3Player).play(output = "front", soundFileRepository.findByNameEqualsIgnoreCaseAndCollectionNameEqualsIgnoreCase("woodlands", "ambience")!!, 25, loop = true)
     }
 
     @Test
@@ -90,18 +95,13 @@ class OutputTest {
     @Test
     fun identify_existingMixerName_playsTestSound() {
         controller.identify(label = "front")
-        verify(mp3Player).play(output = "front", file = "test", 100, loop = false)
+        verify(mp3Player).play(output = "front", file = SoundFileRepository.getTestFile(), 100, loop = false)
     }
 
     @Test
     fun identify_existingLabel_playsTestSound() {
         controller.identify(label = "ambience")
-        verify(mp3Player).play(output = "front", file = "test", 100, loop = false)
+        verify(mp3Player).play(output = "front", file = SoundFileRepository.getTestFile(), 100, loop = false)
     }
 
-    @Test
-    fun findFiles_query_passedArgsToMp3Player() {
-        controller.findFile(query = "ambience")
-        verify(mp3Player).findFiles("ambience")
-    }
 }

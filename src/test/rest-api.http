@@ -3,12 +3,17 @@ Content-Type: application/json
 
 ###
 
-POST localhost:8080/outputs/lautsprecher(realtekhighdefinitionaudio)/label/speaker
+POST localhost:8080/outputs/kopfh%C3%B6rer%28hemabtspeaker%29/label/black
 Content-Type: application/json
 
 ###
 
-POST localhost:8080/outputs/speaker/stop
+POST localhost:8080/outputs/kopfhoerer(realtek(r)audio)/identify
+Content-Type: application/json
+
+###
+
+POST localhost:8080/outputs/kopfhoerer(realtek(r)audio)/stop
 
 ###
 
@@ -63,30 +68,24 @@ Content-Type: application/json
 
 ###
 
-PUT localhost:8080/scene/town_inside_investigation
+PUT localhost:8080/scene/commercial_break
 Content-Type: application/json
 
 {
-  "name": "town_inside_investigation",
-  "hotbar": [
-    {
-      "file": "bits/door_knocking",
-      "loop": false,
-      "volume": 100
-    }
-  ],
+  "name": "commercial_break",
+  "hotbar": [],
   "mappings": [
     {
-      "file": "music/investigation",
-      "output": "black",
+      "file": "music/commercial",
+      "output": "soundbar",
       "loop": true,
-      "volume": 65
+      "volume": 100
     },
     {
-      "file": "ambience/suburbs_day",
+      "file": "music/commercial",
       "output": "green",
       "loop": true,
-      "volume": 60
+      "volume": 10
     }
   ]
 

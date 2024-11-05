@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 import kotlin.collections.HashSet
 
-class SceneMappingDto(val file: String, val output: String, val loop: Boolean, val volume: Int) {
+class SceneMappingDto(val file: SoundFileDto, val output: String, val loop: Boolean, val volume: Int) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -40,7 +40,8 @@ class SceneDto(val name: String, val mappings: Set<SceneMappingDto>, val hotbar:
 class SceneController(
     val mp3Player: Mp3Player,
     val sceneRepository: SceneRepository,
-    val outputRepository: OutputRepository
+    val outputRepository: OutputRepository,
+    val soundFileRepository: SoundFileRepository
 ) {
     @PutMapping("/{name}")
     fun setScene(@RequestBody dto: SceneDto, @PathVariable("name") name: String) {
@@ -55,7 +56,9 @@ class SceneController(
                 dto.mappings.mapNotNull { m ->
                     outputRepository.findByLabelEqualsIgnoreCaseOrMixerEqualsIgnoreCase(m.output, m.output)
                         ?.let { output ->
-                            SceneMapping(file = m.file, volume = m.volume, loop = m.loop, output = output, scene = it)
+                            soundFileRepository.findByNameEqualsIgnoreCaseAndCollectionNameEqualsIgnoreCase(m.file.name, m.file.collection)?.let { soundFile ->
+                                SceneMapping(file = soundFile, volume = m.volume, loop = m.loop, output = output, scene = it)
+                            }
                         }
                 })
             it.hotbar.clear()
@@ -74,7 +77,7 @@ class SceneController(
                 mappings = it.sceneMappings.map { m ->
                     SceneMappingDto(
                         output = m.output.label ?: m.output.mixer,
-                        file = m.file,
+                        file = SoundFileDto(name = m.file.name, collection = m.file.collection.name),
                         loop = m.loop,
                         volume = m.volume
                     )

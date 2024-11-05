@@ -1,23 +1,20 @@
 package com.luckylookas.soundboard
 
+import com.luckylookas.soundboard.persistence.BlobStorage
 import com.luckylookas.soundboard.persistence.Output
 import com.luckylookas.soundboard.persistence.OutputRepository
+import com.luckylookas.soundboard.persistence.SoundFile
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.BufferedInputStream
-import java.io.FileInputStream
 import java.io.InputStream
-import java.nio.file.Files
-import java.nio.file.Path
 import java.util.*
 import javax.sound.sampled.*
-import kotlin.io.path.name
 
 enum class STATE {
     PLAYING,
@@ -28,7 +25,7 @@ enum class STATE {
 fun encodeMixerName(name: String): String = name.replace(" ", "").lowercase()
 
 @Component
-class Mp3Player(val outputRepository: OutputRepository , @Value("\${staticdir}") val staticdir: String) {
+class Mp3Player(val outputRepository: OutputRepository , val storage: BlobStorage) {
 
     val backgroundOpsScope = CoroutineScope(SupervisorJob())
 
@@ -74,30 +71,32 @@ class Mp3Player(val outputRepository: OutputRepository , @Value("\${staticdir}")
         .filter { !it.name.lowercase().contains("primary") }
         .toList()
 
-    fun play(output: String, file: String, volume: Int, loop: Boolean) {
-        availableMixers().firstOrNull { encodeMixerName(it.name) == encodeMixerName(output) }?.also { mixer ->
-            (outputRepository.findByMixerEqualsIgnoreCase(output)?.also {
-                it.state = STATE.PLAYING
-                outputRepository.save(it)
-           })
+    fun play(output: String, file: SoundFile, volume: Int, loop: Boolean) {
+        storage.getMp3Stream(file)?.let { blob ->
+            availableMixers().firstOrNull { encodeMixerName(it.name) == encodeMixerName(output) }?.also { mixer ->
+                (outputRepository.findByMixerEqualsIgnoreCase(output)?.also {
+                    it.state = STATE.PLAYING
+                    outputRepository.save(it)
+                })
 
-            backgroundOpsScope.launch(Dispatchers.IO) {
-                getAudioInputStream(FileInputStream("$staticdir$file.mp3")).use {
-                    stop(mixer.name)
-                    val clip = AudioSystem.getClip(mixer)
+                backgroundOpsScope.launch(Dispatchers.IO) {
+                    getAudioInputStream(blob).use { stream ->
+                        stop(mixer.name)
+                        val clip = AudioSystem.getClip(mixer)
 
-                    clip.open(it)
-                    clip.loop(if (loop) Clip.LOOP_CONTINUOUSLY else 0)
-                    setVolume(output, volume)
-                    clip.addLineListener { event ->
-                        if (event.type == LineEvent.Type.CLOSE) {
-                            outputRepository.findByMixerEqualsIgnoreCase(output)?.also {
-                                it.state = STATE.STOPPED
-                                outputRepository.save(it)
+                        clip.open(stream)
+                        clip.loop(if (loop) Clip.LOOP_CONTINUOUSLY else 0)
+                        setVolume(output, volume)
+                        clip.addLineListener { event ->
+                            if (event.type == LineEvent.Type.CLOSE) {
+                                outputRepository.findByMixerEqualsIgnoreCase(output)?.also {
+                                    it.state = STATE.STOPPED
+                                    outputRepository.save(it)
+                                }
                             }
                         }
+                        clip.start()
                     }
-                    clip.start()
                 }
             }
         }
@@ -105,8 +104,9 @@ class Mp3Player(val outputRepository: OutputRepository , @Value("\${staticdir}")
 
     fun stop(output: String) {
         availableMixers().firstOrNull { encodeMixerName(it.name) == encodeMixerName(output) }?.also { mixer ->
-            AudioSystem.getMixer(mixer).sourceLines.forEach {
-                with((it as DataLine)) {
+            AudioSystem.getMixer(mixer).sourceLines.forEach { clip ->
+                with((clip as Clip)) {
+                    loop(0)
                     stop()
                     drain()
                     close()
@@ -136,11 +136,6 @@ class Mp3Player(val outputRepository: OutputRepository , @Value("\${staticdir}")
 
         return AudioSystem.getAudioInputStream(format, audioInputStream)
     }
-
-    fun findFiles(query: String): List<String> =
-        Files.find(Path.of(staticdir), 0, { path, _ -> path.fileName.name.lowercase().startsWith(query.lowercase()) && path.fileName.name.endsWith(".m3") }).map { it.fileName.name }.toList()
-
-
 }
 
 
