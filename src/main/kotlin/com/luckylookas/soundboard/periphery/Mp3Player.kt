@@ -1,9 +1,7 @@
-package com.luckylookas.soundboard
+package com.luckylookas.soundboard.periphery
 
-import com.luckylookas.soundboard.persistence.BlobStorage
 import com.luckylookas.soundboard.persistence.Output
 import com.luckylookas.soundboard.persistence.OutputRepository
-import com.luckylookas.soundboard.persistence.SoundFile
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.CoroutineScope
@@ -25,7 +23,7 @@ enum class STATE {
 fun encodeMixerName(name: String): String = name.replace(" ", "").lowercase()
 
 @Component
-class Mp3Player(val outputRepository: OutputRepository , val storage: BlobStorage) {
+class Mp3Player(val outputRepository: OutputRepository) {
 
     val backgroundOpsScope = CoroutineScope(SupervisorJob())
 
@@ -71,8 +69,8 @@ class Mp3Player(val outputRepository: OutputRepository , val storage: BlobStorag
         .filter { !it.name.lowercase().contains("primary") }
         .toList()
 
-    fun play(output: String, file: SoundFile, volume: Int, loop: Boolean) {
-        storage.getMp3Stream(file)?.let { blob ->
+    fun play(output: String, file: InputStream, volume: Int, loop: Boolean) {
+        file.let { blob ->
             availableMixers().firstOrNull { encodeMixerName(it.name) == encodeMixerName(output) }?.also { mixer ->
                 (outputRepository.findByMixerEqualsIgnoreCase(output)?.also {
                     it.state = STATE.PLAYING
@@ -89,6 +87,7 @@ class Mp3Player(val outputRepository: OutputRepository , val storage: BlobStorag
                         setVolume(output, volume)
                         clip.addLineListener { event ->
                             if (event.type == LineEvent.Type.CLOSE) {
+                                stream.close()
                                 outputRepository.findByMixerEqualsIgnoreCase(output)?.also {
                                     it.state = STATE.STOPPED
                                     outputRepository.save(it)
@@ -133,43 +132,7 @@ class Mp3Player(val outputRepository: OutputRepository , val storage: BlobStorag
             false
         )
 
-
         return AudioSystem.getAudioInputStream(format, audioInputStream)
     }
 }
 
-
-
-
-//    @Deprecated("line can't loop")
-//    suspend fun play_line(output: String, file: String, loop: Boolean) {
-//
-//        mixers[output.lowercase()]?.also { mixer ->
-//            backgroundOpsScope.launch(Dispatchers.IO) {
-//                getAudioInputStream(FileInputStream("C:\\untis\\dev\\soundboard\\src\\main\\resources\\$file.mp3")).use {
-//                    val sourceDataLine = AudioSystem.getMixer(mixer)
-//                        .getLine(DataLine.Info(SourceDataLine::class.java, it.format)) as SourceDataLine
-//                    try {
-//                        with(sourceDataLine) {
-//                            stop()
-//                            drain()
-//                            close()
-//                            open(format)
-//                            start()
-//                        }
-//                        var bytesRead: Int
-//                        val buffer = ByteArray(65536)
-//                        while (it.read(buffer).also { r -> bytesRead = r } != -1) {
-//                            sourceDataLine.write(buffer, 0, bytesRead)
-//                        }
-//                    } finally {
-//                        with(sourceDataLine) {
-//                            stop()
-//                            drain()
-//                            close()
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }

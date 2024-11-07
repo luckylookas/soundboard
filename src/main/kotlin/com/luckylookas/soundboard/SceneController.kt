@@ -1,5 +1,7 @@
 package com.luckylookas.soundboard
 
+import com.luckylookas.soundboard.periphery.BlobStorage
+import com.luckylookas.soundboard.periphery.Mp3Player
 import com.luckylookas.soundboard.persistence.*
 import jakarta.transaction.Transactional
 import org.springframework.web.bind.annotation.*
@@ -41,7 +43,8 @@ class SceneController(
     val mp3Player: Mp3Player,
     val sceneRepository: SceneRepository,
     val outputRepository: OutputRepository,
-    val soundFileRepository: SoundFileRepository
+    val soundFileRepository: SoundFileRepository,
+    val blobStorage: BlobStorage
 ) {
     @PutMapping("/{name}")
     fun setScene(@RequestBody dto: SceneDto, @PathVariable("name") name: String) {
@@ -93,7 +96,9 @@ class SceneController(
         mp3Player.destroy()
         sceneRepository.findByNameEqualsIgnoreCase(name)?.also {
             it.sceneMappings.forEach { mapping ->
-                mp3Player.play(mapping.output.mixer, mapping.file, mapping.volume, mapping.loop)
+                blobStorage.getMp3Stream(mapping.file)?.let { stream ->
+                    mp3Player.play(mapping.output.mixer, stream, mapping.volume, mapping.loop)
+                }
             }
         }
     }

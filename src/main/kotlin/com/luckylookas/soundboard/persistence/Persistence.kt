@@ -1,6 +1,6 @@
 package com.luckylookas.soundboard.persistence
 
-import com.luckylookas.soundboard.STATE
+import com.luckylookas.soundboard.periphery.STATE
 import jakarta.persistence.*
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
@@ -55,7 +55,6 @@ class SoundFile(
     @OneToMany(fetch = FetchType.LAZY)
     val sceneMappings:  MutableSet<SceneMapping> = HashSet()
 )
-
 
 @Entity
 class HotBarEntry(
@@ -137,4 +136,6 @@ interface SoundFileRepository: CrudRepository<SoundFile, Int> {
 @Repository
 interface SoundFileCollectionRepository: CrudRepository<SoundFileCollection, Int> {
     fun findByNameEqualsIgnoreCase(name: String): SoundFileCollection?
+    fun existsByName(name: String): Boolean
+    override fun findAll(): List<SoundFileCollection>
 }

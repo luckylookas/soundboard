@@ -1,18 +1,21 @@
 package com.luckylookas.soundboard
 
+import com.luckylookas.soundboard.periphery.BlobStorage
+import com.luckylookas.soundboard.periphery.Mp3Player
+import com.luckylookas.soundboard.periphery.STATE
 import com.luckylookas.soundboard.persistence.*
 import jakarta.transaction.Transactional
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers
-import org.mockito.Mockito
-import org.mockito.Mockito.*
+import org.mockito.Mock
+import org.mockito.kotlin.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import java.io.InputStream
 
 @EnableAutoConfiguration
 @SpringBootTest(classes = [OutputRepository::class, SceneRepository::class, SceneController::class, SoundFileRepository::class, SoundFileCollectionRepository::class])
@@ -27,13 +30,24 @@ class SceneTest {
     private lateinit var soundFileRepository: SoundFileRepository
 
     @MockBean
+    private lateinit var blobStorage: BlobStorage
+
+    @MockBean
     private lateinit var mp3Player: Mp3Player
 
     @Autowired
     private lateinit var controller: SceneController
 
+    @Mock
+    private lateinit var woodlandsMockStream: InputStream
+    @Mock
+    private lateinit var luteConcertMockStream: InputStream
+
     @BeforeEach
     fun setup() {
+        doReturn(woodlandsMockStream).`when`(blobStorage).getMp3Stream(argThat(SoundFileMatcher(SoundFile(name = "woodlands", collection = SoundFileCollection(name = "ambience")))))
+        doReturn(luteConcertMockStream).`when`(blobStorage).getMp3Stream(argThat(SoundFileMatcher(SoundFile(name = "luteConcert", collection = SoundFileCollection(name = "music")))))
+
         outputRepository.save(Output(mixer = "front", state = STATE.STOPPED, label = "ambience"))
         outputRepository.save(Output(mixer = "back", state = STATE.STOPPED, label = "music"))
         soundFileRepository.save(SoundFile(name = "luteConcert", collection = SoundFileCollection(name = "music")))
@@ -97,26 +111,26 @@ class SceneTest {
     @Test
     fun playScene_validInput_classPlayOnMp3Player() {
         val mappings = setOf(
-            SceneMappingDto(file = SoundFileDto("woodlands", "ambience"), output = "ambience", loop = true, volume = 25),
-            SceneMappingDto(file = SoundFileDto("chatter", "music"), output = "music", loop = false, volume = 40)
+            SceneMappingDto(file = SoundFileDto("woodlands", "ambience"), output = "front", loop = true, volume = 25),
+            SceneMappingDto(file = SoundFileDto("luteConcert", "music"), output = "back", loop = false, volume = 40)
         )
 
         controller.setScene(SceneDto(name = "tavern", mappings = mappings), "tavern")
         controller.play("tavern")
+        verify(mp3Player).destroy()
+        verify(mp3Player).play(
+                    "front",
+                    woodlandsMockStream,
+                    25,
+                    true)
 
-//        verify(mp3Player).play(
-//                    ArgumentMatchers.eq("front"),
-//                    argThat(SoundFileMatcher(SoundFile(name = "woodlands", collection = SoundFileCollection(name = "ambience")))),
-//                    ArgumentMatchers.eq(25),
-//                    ArgumentMatchers.eq(true))
-//
-//        verify(mp3Player).play(
-//            ArgumentMatchers.eq("front"),
-//            argThat(SoundFileMatcher(SoundFile(name = "chatter", collection = SoundFileCollection(name = "music")))),
-//            ArgumentMatchers.eq(40),
-//            ArgumentMatchers.eq(false))
-//
-//        verifyNoMoreInteractions(mp3Player)
+        verify(mp3Player).play(
+            "back",
+            luteConcertMockStream,
+            40,
+            false)
+
+        verifyNoMoreInteractions(mp3Player)
 
     }
 }

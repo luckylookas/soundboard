@@ -1,7 +1,11 @@
-package com.luckylookas.soundboard.persistence
+package com.luckylookas.soundboard.periphery
 
 
+import com.luckylookas.soundboard.SoundFileDto
+import com.luckylookas.soundboard.persistence.SoundFile
+import com.luckylookas.soundboard.persistence.SoundFileCollection
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.converter.StringHttpMessageConverter
 import org.springframework.stereotype.Component
 import java.io.File
 import java.io.FileInputStream
@@ -11,7 +15,10 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 @Component
-class BlobStorage(@Value("\${staticdir}") val staticdir: String) {
+class BlobStorage(
+    @Value("\${staticdir}") val staticdir: String,
+    private val stringHttpMessageConverter: StringHttpMessageConverter
+) {
 
     fun getMp3Stream(soundFile: SoundFile): InputStream? {
         return if (Files.exists(Paths.get(staticdir, soundFile.collection.name, soundFile.name)))
@@ -29,4 +36,19 @@ class BlobStorage(@Value("\${staticdir}") val staticdir: String) {
                 }
                 return@map collection
             }.orEmpty().toList()
+
+    fun save( handle: SoundFileDto, inputStream: InputStream) {
+        Paths.get(staticdir, handle.collection).toFile().mkdirs()
+        inputStream.use {
+            it.copyTo(Paths.get(staticdir, handle.collection, handle.name).toFile().outputStream())
+        }
+    }
+
+    fun delete(handle: SoundFileDto) {
+         Paths.get(staticdir, handle.collection, handle.name).toFile().let {
+             if (it.exists()) {
+                 it.delete()
+             }
+         }
+    }
 }
