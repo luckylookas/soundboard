@@ -1,31 +1,21 @@
 package com.luckylookas.soundboard
 
 import com.luckylookas.soundboard.periphery.BlobStorage
-import com.luckylookas.soundboard.periphery.Mp3Player
-import com.luckylookas.soundboard.periphery.STATE
 import com.luckylookas.soundboard.persistence.*
 import jakarta.annotation.PostConstruct
 import jakarta.transaction.Transactional
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import org.mockito.kotlin.argThat
-import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayInputStream
-import java.io.FileInputStream
-import java.io.InputStream
 
 @Transactional
 @EnableAutoConfiguration
@@ -48,13 +38,13 @@ class LibraryTest {
 
     @BeforeEach
     fun setUp() {
-        controller.delete(testFileDto.collection, testFileDto.name)
-
+        controller.delete(testFileDto.collection, testFileDto.name, true)
     }
 
     @AfterEach
     fun tearDown() {
-        controller.delete(testFileDto.collection, testFileDto.name)
+        controller.delete(testFileDto.collection, testFileDto.name, true)
+
     }
 
     @Test

@@ -1,8 +1,6 @@
 package com.luckylookas.soundboard
 
 import com.luckylookas.soundboard.periphery.BlobStorage
-import com.luckylookas.soundboard.periphery.Mp3Player
-import com.luckylookas.soundboard.periphery.STATE
 import com.luckylookas.soundboard.persistence.*
 import jakarta.annotation.PostConstruct
 import jakarta.transaction.Transactional
@@ -64,17 +62,17 @@ class OutputTest {
         assertThat(controller).isNotNull
         assertThat(mp3Player).isNotNull
         assertThat(controller.mp3Player == mp3Player).isTrue
-        assertThat(controller.getOutputs()["front"]?.label).isEqualTo("ambience")
+        assertThat(controller.getOutputs().find { it.name == "front" }).isEqualTo("ambience")
 
         val outputs = controller.getOutputs()
-        assertThat(outputs).containsOnlyKeys("front", "back")
-        assertThat(outputs.values).extracting("state").allMatch { it == STATE.STOPPED }
+        assertThat(outputs).extracting("name").containsExactlyInAnyOrder("front", "back")
+        assertThat(outputs).extracting("state").allMatch { it == STATE.STOPPED }
     }
 
     @Test
     fun relabel_relabel_labelIsAssigned() {
         controller.relabel("back", "music")
-        assertThat(controller.getOutputs()["back"]?.label).isEqualTo("music")
+        assertThat(controller.getOutputs().find { it.name == "back" }).extracting("label").isEqualTo("music")
     }
 
     @Test

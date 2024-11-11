@@ -1,8 +1,6 @@
 package com.luckylookas.soundboard
 
 import com.luckylookas.soundboard.periphery.BlobStorage
-import com.luckylookas.soundboard.periphery.Mp3Player
-import com.luckylookas.soundboard.periphery.STATE
 import com.luckylookas.soundboard.persistence.Output
 import com.luckylookas.soundboard.persistence.OutputRepository
 import com.luckylookas.soundboard.persistence.SoundFileRepository
@@ -32,8 +30,8 @@ class OutputController(val mp3Player: Mp3Player, val outputRepository: OutputRep
     }
 
     @GetMapping("")
-    fun getOutputs(): Map<String, OutputStateDto> = outputRepository.findAll().associateBy({ it.mixer },
-        { OutputStateDto(name = it.mixer, label = it.label ?: "", state = it.state) })
+    fun getOutputs(): List<OutputStateDto> = outputRepository.findAll()
+        .map{ OutputStateDto(name = it.mixer, label = it.label ?: "", state = it.state) }.toList()
 
     @PostMapping("/{label}/play")
     fun play(
@@ -64,7 +62,7 @@ class OutputController(val mp3Player: Mp3Player, val outputRepository: OutputRep
             }
         }
 
-    @PostMapping("/{label}/stop")
+    @PutMapping("/{label}/stop")
     fun stop(@PathVariable("label") label: String) =
         outputRepository.findByLabelEqualsIgnoreCaseOrMixerEqualsIgnoreCase(label, label)?.also {
             mp3Player.stop(it.mixer)

@@ -1,6 +1,6 @@
 package com.luckylookas.soundboard.persistence
 
-import com.luckylookas.soundboard.periphery.STATE
+import com.luckylookas.soundboard.STATE
 import jakarta.persistence.*
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
@@ -116,6 +116,7 @@ class Output(
 interface OutputRepository: CrudRepository<Output, String> {
     fun findByLabelEqualsIgnoreCaseOrMixerEqualsIgnoreCase(label: String, mixer: String): Output?
     fun findByMixerEqualsIgnoreCase(mixer: String): Output?
+    override fun findAll(): List<Output>
 }
 
 @Repository

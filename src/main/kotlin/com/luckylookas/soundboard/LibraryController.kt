@@ -5,6 +5,7 @@ import com.luckylookas.soundboard.persistence.SoundFile
 import com.luckylookas.soundboard.persistence.SoundFileCollection
 import com.luckylookas.soundboard.persistence.SoundFileCollectionRepository
 import com.luckylookas.soundboard.persistence.SoundFileRepository
+import jakarta.annotation.PostConstruct
 import jakarta.transaction.Transactional
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
@@ -21,6 +22,7 @@ class LibraryController(
 ) {
 
     @PostMapping("/rescan")
+    @PostConstruct
     fun rescan() {
         soundFileRepository.deleteAll()
         soundFileCollectionRepository.deleteAll()
@@ -65,16 +67,18 @@ class LibraryController(
     fun delete(
         @PathVariable collection: String,
         @PathVariable name: String,
+        @RequestParam(required = false) deleteCollection: Boolean = false
     ) {
         SoundFileDto(
             name = name.lowercase().replace(" ", "_"),
             collection = collection.lowercase().replace(" ", "_")
         ).let {
             blobStorage.delete(it)
+            if (deleteCollection) {
+                blobStorage.deleteCollection(it.collection)
+            }
             soundFileRepository.findByNameEqualsIgnoreCaseAndCollectionNameEqualsIgnoreCase(it.name, it.collection)
-                ?.let { entity ->
-                    soundFileRepository.delete(entity)
-                }
+                ?.apply { soundFileRepository.delete(this) }
         }
     }
 }

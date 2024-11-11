@@ -1,7 +1,6 @@
 package com.luckylookas.soundboard
 
 import com.luckylookas.soundboard.periphery.BlobStorage
-import com.luckylookas.soundboard.periphery.Mp3Player
 import com.luckylookas.soundboard.persistence.*
 import jakarta.transaction.Transactional
 import org.springframework.web.bind.annotation.*
