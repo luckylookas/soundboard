@@ -46,8 +46,8 @@ class SceneTest {
         doReturn(woodlandsMockStream).`when`(blobStorage).getMp3Stream(argThat(SoundFileMatcher(SoundFile(name = "woodlands", collection = SoundFileCollection(name = "ambience")))))
         doReturn(luteConcertMockStream).`when`(blobStorage).getMp3Stream(argThat(SoundFileMatcher(SoundFile(name = "luteConcert", collection = SoundFileCollection(name = "music")))))
 
-        outputRepository.save(Output(mixer = "front", state = STATE.STOPPED, label = "ambience"))
-        outputRepository.save(Output(mixer = "back", state = STATE.STOPPED, label = "music"))
+        outputRepository.save(Output(mixer = "front", state = STATE.STOPPED, label = "ambience", currentlyPlaying = null))
+        outputRepository.save(Output(mixer = "back", state = STATE.STOPPED, label = "music", currentlyPlaying = null))
         soundFileRepository.save(SoundFile(name = "luteConcert", collection = SoundFileCollection(name = "music")))
         soundFileRepository.save(SoundFile(name = "woodlands", collection = SoundFileCollection(name = "ambience")))
     }
@@ -68,8 +68,8 @@ class SceneTest {
         )
 
         val hotbar = setOf(
-            HotbarDto("sting", volume = 100, loop = false),
-            HotbarDto("distantThunder", volume = 50, loop = false),
+            HotbarDto(SoundFileDto("luteConcert", "music"), volume = 100, loop = false),
+            HotbarDto(SoundFileDto("woodlands", "ambience"), volume = 50, loop = false),
         )
 
         controller.setScene(SceneDto(name = "tavern", mappings = mappings, hotbar = hotbar), "tavern")
@@ -117,12 +117,14 @@ class SceneTest {
         controller.play("tavern")
         verify(mp3Player).destroy()
         verify(mp3Player).play(
+            "woodlands",
                     "front",
                     woodlandsMockStream,
                     25,
                     true)
 
         verify(mp3Player).play(
+            "luteConcert",
             "back",
             luteConcertMockStream,
             40,

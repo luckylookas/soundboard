@@ -29,8 +29,8 @@ class OutputTest {
     class TestConfig(val outputRepository: OutputRepository, val soundFileRepository: SoundFileRepository) {
         @PostConstruct
         fun init() {
-            outputRepository.save(Output(mixer = "front", label = "ambience", state = STATE.STOPPED))
-            outputRepository.save(Output(mixer = "back", state = STATE.STOPPED))
+            outputRepository.save(Output(mixer = "front", label = "ambience", state = STATE.STOPPED, currentlyPlaying = null))
+            outputRepository.save(Output(mixer = "back", state = STATE.STOPPED, currentlyPlaying = null))
             soundFileRepository.save(SoundFile(name = "woodlands", collection = SoundFileCollection(name = "ambience")))
         }
     }
@@ -46,15 +46,45 @@ class OutputTest {
 
     @Mock
     private lateinit var woodlandsMockStream: InputStream
+
     @Mock
     private lateinit var luteConcertMockStream: InputStream
+
     @Mock
     private lateinit var testMockStream: InputStream
+
     @BeforeEach
     fun setUp() {
-        doReturn(woodlandsMockStream).`when`(blobStorage).getMp3Stream(argThat(SoundFileMatcher(SoundFile(name = "woodlands", collection = SoundFileCollection(name = "ambience")))))
-        doReturn(luteConcertMockStream).`when`(blobStorage).getMp3Stream(argThat(SoundFileMatcher(SoundFile(name = "luteConcert", collection = SoundFileCollection(name = "music")))))
-        doReturn(testMockStream).`when`(blobStorage).getMp3Stream(argThat(SoundFileMatcher(SoundFile(name = "test", collection = SoundFileCollection(name = "test")))))
+        doReturn(woodlandsMockStream).`when`(blobStorage).getMp3Stream(
+            argThat(
+                SoundFileMatcher(
+                    SoundFile(
+                        name = "woodlands",
+                        collection = SoundFileCollection(name = "ambience")
+                    )
+                )
+            )
+        )
+        doReturn(luteConcertMockStream).`when`(blobStorage).getMp3Stream(
+            argThat(
+                SoundFileMatcher(
+                    SoundFile(
+                        name = "luteConcert",
+                        collection = SoundFileCollection(name = "music")
+                    )
+                )
+            )
+        )
+        doReturn(testMockStream).`when`(blobStorage).getMp3Stream(
+            argThat(
+                SoundFileMatcher(
+                    SoundFile(
+                        name = "test",
+                        collection = SoundFileCollection(name = "test")
+                    )
+                )
+            )
+        )
     }
 
     @Test
@@ -88,7 +118,7 @@ class OutputTest {
     @Test
     fun play_anyArgs_argsPassedToMp3Player() {
         controller.play(label = "ambience", volume = 25, loop = true, file = SoundFileDto("woodlands", "ambience"))
-        verify(mp3Player).play(output = "front", woodlandsMockStream, 25, loop = true)
+        verify(mp3Player).play("woodlands", output = "front", woodlandsMockStream, 25, loop = true)
     }
 
     @Test
@@ -115,16 +145,21 @@ class OutputTest {
     fun identify_existingMixerName_playsTestSound() {
         controller.identify(label = "front")
         verify(mp3Player).play(
+            SoundFileRepository.getTestFile().name,
             "front",
             testMockStream,
-                100,
-            false)
+            100,
+            false
+        )
     }
 
     @Test
     fun identify_existingLabel_playsTestSound() {
         controller.identify(label = "ambience")
-        verify(mp3Player).play(output = "front", file = testMockStream, 100, loop = false)
+        verify(mp3Player).play(
+            SoundFileRepository.getTestFile().name,
+            output = "front", file = testMockStream, 100, loop = false
+        )
     }
 
 }

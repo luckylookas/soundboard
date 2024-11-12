@@ -68,7 +68,7 @@ class Mp3PlayerTest {
     @Test
     fun loadPlayStop_filtersInputsAndDefaultAliases() {
         assertThat(outputRepository.findByMixerEqualsIgnoreCase("speaker")?.state).isEqualTo(STATE.STOPPED)
-        mp3Player.play("speaker", mock<InputStream>(), 10, false)
+        mp3Player.play("any","speaker", mock<InputStream>(), 10, false)
         verify(async, times(1)).dispatch(any())
         assertThat(outputRepository.findByMixerEqualsIgnoreCase("speaker")?.state).isEqualTo(STATE.PLAYING)
         mp3Player.stop("speaker")
@@ -79,7 +79,7 @@ class Mp3PlayerTest {
     @Test
     fun loadPlayDestory_filtersInputsAndDefaultAliases() {
         assertThat(outputRepository.findByMixerEqualsIgnoreCase("speaker")?.state).isEqualTo(STATE.STOPPED)
-        mp3Player.play("speaker", mock<InputStream>(), 10, false)
+        mp3Player.play("any","speaker", mock<InputStream>(), 10, false)
         verify(async, times(1)).dispatch(any())
         assertThat(outputRepository.findByMixerEqualsIgnoreCase("speaker")?.state).isEqualTo(STATE.PLAYING)
         mp3Player.destroy()

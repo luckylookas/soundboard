@@ -7,7 +7,7 @@ import com.luckylookas.soundboard.persistence.SoundFileRepository
 import jakarta.transaction.Transactional
 import org.springframework.web.bind.annotation.*
 
-class OutputStateDto(val name: String, val label: String, val state: STATE)
+class OutputStateDto(val name: String, val label: String, val state: STATE, val currentlyPlaying: String?)
 
 @RestController
 @RequestMapping("/outputs")
@@ -23,7 +23,7 @@ class OutputController(val mp3Player: Mp3Player, val outputRepository: OutputRep
             throw IllegalArgumentException("Duplicate label '$label'")
         }
 
-        (outputRepository.findByMixerEqualsIgnoreCase(name) ?: Output(name)).also {
+        (outputRepository.findByMixerEqualsIgnoreCase(name) ?: Output(mixer = name, currentlyPlaying = null)).also {
             it.label = label
             outputRepository.save(it)
         }
@@ -31,7 +31,7 @@ class OutputController(val mp3Player: Mp3Player, val outputRepository: OutputRep
 
     @GetMapping("")
     fun getOutputs(): List<OutputStateDto> = outputRepository.findAll()
-        .map{ OutputStateDto(name = it.mixer, label = it.label ?: "", state = it.state) }.toList()
+        .map{ OutputStateDto(name = it.mixer, label = it.label ?: "", state = it.state, currentlyPlaying = it.currentlyPlaying) }.toList()
 
     @PostMapping("/{label}/play")
     fun play(
@@ -43,7 +43,7 @@ class OutputController(val mp3Player: Mp3Player, val outputRepository: OutputRep
         outputRepository.findByLabelEqualsIgnoreCaseOrMixerEqualsIgnoreCase(label, label)?.let { output ->
             soundFileRepository.findByNameEqualsIgnoreCaseAndCollectionNameEqualsIgnoreCase(file.name, file.collection)?.let {
                 blobStorage.getMp3Stream(it)?.let { stream ->
-                    mp3Player.play(output.mixer, stream, volume, loop)
+                    mp3Player.play(it.name,output.mixer, stream, volume, loop)
                 }
             }
         }
@@ -58,7 +58,7 @@ class OutputController(val mp3Player: Mp3Player, val outputRepository: OutputRep
     fun identify(@PathVariable("label") label: String) =
         outputRepository.findByLabelEqualsIgnoreCaseOrMixerEqualsIgnoreCase(label, label)?.let {
             blobStorage.getMp3Stream(SoundFileRepository.getTestFile())?.let { stream ->
-                mp3Player.play(it.mixer,stream , 100,false)
+                mp3Player.play(SoundFileRepository.getTestFile().name ,it.mixer,stream , 100,false)
             }
         }
 

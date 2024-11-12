@@ -12,11 +12,53 @@ export interface OutputState {
     name: string,
     label: string,
     state: string,
+    currentlyPlaying?: string,
 }
 
 export interface SoundFile {
     name: string,
     collection: string,
+}
+
+export interface Scene {
+    name: string,
+    mappings: SceneMapping[]
+    hotbar: HotBar[]
+}
+
+export interface SceneMapping {
+    file: SoundFile,
+    output: string,
+    loop: boolean,
+    volume: number
+}
+
+export interface HotBar {
+    file: SoundFile,
+    loop: boolean,
+    volume: number
+}
+
+
+export const Scenes =  {
+
+    setScene: async (scene: Scene): Promise<any> => {
+        return await fetch(`/scene/${scene.name}`, {method: "PUT", body: JSON.stringify(scene)})
+    },
+
+    getScene: async (scene: Scene): Promise<Scene> => {
+        const ret = await fetch(`/scene/${scene.name}`)
+        return await ret.json()
+    },
+
+    play: async (scene: Scene): Promise<any> => {
+        return await fetch(`/scene/${scene.name}/play`, {method: "PUT"})
+    },
+
+    stop: async (scene: Scene): Promise<any> => {
+        return await fetch(`/scene/${scene.name}/stop`, {method: "PUT"})
+    },
+
 }
 
 export const Library = {
@@ -53,7 +95,7 @@ export const Library = {
 
         const it = await fetch(`/files/${collection}${name ? `?name=${name}` : ''}`, {
             method: "POST",
-            body: formData
+            body: formData,
         })
         return await it.json()
     },
@@ -83,6 +125,9 @@ export const Output = {
     play: async (name: string, file: SoundFile, volume?: number, loop?: boolean): Promise<any> => {
         return await fetch(`/outputs/${name}/play${loop ? `?loop=true` : '?loop=false'}${volume ? `&volume=${volume}` : ''}`, {
             method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify(file)
         })
     },

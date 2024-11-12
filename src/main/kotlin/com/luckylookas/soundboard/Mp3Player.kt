@@ -42,7 +42,7 @@ class Mp3Player(val outputRepository: OutputRepository, val audioSystem: AudioSy
 
         availableMixers.forEach {
             outputRepository.findByMixerEqualsIgnoreCase(encodeMixerName(it))
-                ?: outputRepository.save(Output(mixer = it, state = STATE.STOPPED))
+                ?: outputRepository.save(Output(mixer = it, state = STATE.STOPPED, currentlyPlaying = null))
         }
     }
 
@@ -63,10 +63,14 @@ class Mp3Player(val outputRepository: OutputRepository, val audioSystem: AudioSy
         }
     }
 
-    fun play(output: String, file: InputStream, volume: Int, loop: Boolean) {
+    fun play(filename: String, output: String, file: InputStream, volume: Int, loop: Boolean) {
         file.let { blob ->
             availableMixers().firstOrNull { encodeMixerName(it.name) == encodeMixerName(output) }?.also { mixer ->
-                outputRepository.findByMixerEqualsIgnoreCase(output)?.state = STATE.PLAYING
+                outputRepository.findByMixerEqualsIgnoreCase(output)?.apply {
+                    currentlyPlaying = filename
+                    state = STATE.PLAYING
+                }
+
                 async.dispatch {
                     getAudioInputStream(blob).use { stream ->
                         stop(mixer.name)
@@ -77,7 +81,10 @@ class Mp3Player(val outputRepository: OutputRepository, val audioSystem: AudioSy
                         clip.addLineListener { event ->
                             if (event.type == LineEvent.Type.CLOSE) {
                                 stream.close()
-                                outputRepository.findByMixerEqualsIgnoreCase(output)?.state = STATE.STOPPED
+                                outputRepository.findByMixerEqualsIgnoreCase(output)?.apply {
+                                    state = STATE.STOPPED
+                                    currentlyPlaying = null
+                                }
                             }
                         }
                         clip.start()
@@ -91,7 +98,10 @@ class Mp3Player(val outputRepository: OutputRepository, val audioSystem: AudioSy
         availableMixers().firstOrNull { encodeMixerName(it.name) == encodeMixerName(output) }?.also { mixer ->
             audioSystem.getMixer(mixer).sourceLines.forEach { clip ->
                 cancelClip((clip as Clip))
-                outputRepository.findByMixerEqualsIgnoreCase(output)?.state = STATE.STOPPED
+                outputRepository.findByMixerEqualsIgnoreCase(output)?.apply {
+                    currentlyPlaying = null
+                    state = STATE.STOPPED
+                }
             }
         }
     }

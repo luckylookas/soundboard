@@ -1,7 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {Library, SoundFile} from "./api";
 
-function LibraryComponent() {
+interface Props {
+    onSelect: (file?: SoundFile) => void
+    selected?: SoundFile
+}
+
+function LibraryComponent({onSelect, selected}: Props) {
     const [collections, setCollections] = useState<string[]>([])
     const [selectedCollection, setSelectedCollection] = useState<string>('')
     const [files, setFiles] = useState<SoundFile[]>([])
@@ -9,6 +14,7 @@ function LibraryComponent() {
     useEffect(() => {
         if (!selectedCollection) {
             setFiles([])
+            onSelect(undefined)
             return
         }
         Library.getCollection(selectedCollection).then(c => setFiles(c))
@@ -32,6 +38,7 @@ function LibraryComponent() {
         <div className='flex w-1/2'>
             <ul className='flex-col flex-grow'>
                 {files.map(file => <li
+                    onClick={e => onSelect(file)}
                     className={"flex-1 bg-amber-200 hover:px-2 cursor-pointer hover:bg-amber-100"}>{file.name}</li>)}
             </ul>
         </div>

@@ -1,28 +1,50 @@
 import React, {useEffect, useState} from 'react';
-import {Output, OutputState} from "./api";
+import OutputsOverviewComponent from "./OutputsOverviewComponent";
+import {Output, OutputState, SoundFile} from "./api";
+import LibraryComponent from "./LibraryComponent";
 
 function App() {
 
-    const [outputs, setOutputs] = useState<OutputState[]>([])
+    const outputs = useState<OutputState[]>([])
     const [selectedOutput, setSelectedOutput] = useState<OutputState>()
+    const [selectedSoundFile, setSelectedSoundFile] = useState<SoundFile>()
 
     useEffect(() => {
-        Output.list().then(it => setOutputs(it))
+        Output.list().then(o => outputs[1](o))
     }, []);
 
-    return<div className='flex flex-row flex-nowrap'>
-        <div className='flex'>
-            <ul className='flex-col flex-grow'>
-                {
-                    outputs.map(it => <li
-                        className={`${selectedOutput === it ? 'bg-amber-100 px-2' : 'hover:bg-amber-100 hover:px-2' } flex-1 bg-amber-200 hover:px-2 cursor-pointer`}
-                        onClick={() => setSelectedOutput(it)}
-                    >{ `${(it.label ? it.label : it.name)} ${!it.label ? `[unlabeled]`: ''}`}</li>)
+    useEffect(() => {
+        if (selectedOutput && selectedSoundFile) {
+            Output.play(selectedOutput.label, selectedSoundFile, 70, false)
+                .then(() => Output.list())
+                .then(o => outputs[1](o))
+                .then(() => {
+                    setSelectedSoundFile(undefined)
+                })
+                .catch()
+        }
+    }, [selectedOutput, selectedSoundFile]);
+
+    return <div id="body" className='w-full h-full p-0 m-0'>
+        <div id="outputs_overview">
+            <OutputsOverviewComponent selected={selectedOutput} onSelect={
+                (o) => {
+                    if (o !== selectedOutput)
+                        setSelectedOutput(o)
+                    else
+                        Output.stop(o.label)
+                            .then(() => Output.list())
+                            .then(o => outputs[1](o))
+
                 }
-            </ul>
+            }
+                                      outputs={outputs[0]}></OutputsOverviewComponent>
+        </div>
+        <div id="outputs"></div>
+        <div id="sounds">
+            <LibraryComponent selected={selectedSoundFile} onSelect={setSelectedSoundFile}></LibraryComponent>
         </div>
     </div>
-
 }
 
 export default App;

@@ -53,7 +53,10 @@ class SoundFile(
     val collection: SoundFileCollection,
 
     @OneToMany(fetch = FetchType.LAZY)
-    val sceneMappings:  MutableSet<SceneMapping> = HashSet()
+    val sceneMappings:  MutableSet<SceneMapping> = HashSet(),
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = [(CascadeType.ALL)])
+    val hotbarEntries: MutableSet<HotBarEntry> = HashSet()
 )
 
 @Entity
@@ -62,8 +65,9 @@ class HotBarEntry(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int? = null,
-    @Column(nullable = false)
-    val file: String,
+
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    val file: SoundFile,
     @Column(nullable = false)
     val loop: Boolean,
     @Column(nullable = false)
@@ -108,7 +112,11 @@ class Output(
     var state: STATE = STATE.UNAVAILABLE,
 
     @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
-    val sceneMappings: MutableSet<SceneMapping> = HashSet()
+    val sceneMappings: MutableSet<SceneMapping> = HashSet(),
+
+    @Column(nullable = true)
+    var currentlyPlaying: String?,
+
 
 )
 

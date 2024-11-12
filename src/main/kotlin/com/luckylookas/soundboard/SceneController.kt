@@ -20,7 +20,7 @@ class SceneMappingDto(val file: SoundFileDto, val output: String, val loop: Bool
     }
 }
 
-class HotbarDto(val file: String, val loop: Boolean, val volume: Int) {
+class HotbarDto(val file: SoundFileDto, val loop: Boolean, val volume: Int) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -64,8 +64,13 @@ class SceneController(
                         }
                 })
             it.hotbar.clear()
-            it.hotbar.addAll(dto.hotbar.map { m ->
-                HotBarEntry(file = m.file, volume = m.volume, loop = m.loop, scene = it)
+            it.hotbar.addAll(dto.hotbar.mapNotNull { m ->
+                soundFileRepository.findByNameEqualsIgnoreCaseAndCollectionNameEqualsIgnoreCase(
+                    m.file.name,
+                    m.file.collection
+                )?.let { soundFile ->
+                    HotBarEntry(file = soundFile, volume = m.volume, loop = m.loop, scene = it)
+                }
             })
             sceneRepository.save(it)
         }
@@ -85,7 +90,7 @@ class SceneController(
                     )
                 }.toSet(),
                 hotbar = it.hotbar.map { m ->
-                    HotbarDto(file = m.file, volume = m.volume, loop = m.loop)
+                    HotbarDto(file = SoundFileDto(name = m.file.name, collection = m.file.collection.name), volume = m.volume, loop = m.loop)
                 }.toSet()
             )
         }
@@ -96,7 +101,7 @@ class SceneController(
         sceneRepository.findByNameEqualsIgnoreCase(name)?.also {
             it.sceneMappings.forEach { mapping ->
                 blobStorage.getMp3Stream(mapping.file)?.let { stream ->
-                    mp3Player.play(mapping.output.mixer, stream, mapping.volume, mapping.loop)
+                    mp3Player.play(mapping.file.name, mapping.output.mixer, stream, mapping.volume, mapping.loop)
                 }
             }
         }
