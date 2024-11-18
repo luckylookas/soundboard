@@ -25,8 +25,8 @@ function App() {
         }
     }, [selectedOutput, selectedSoundFile]);
 
-    return <div id="body" className='w-full h-full p-0 m-0'>
-        <div id="outputs_overview">
+    return <div id="body" className=' h-full p-0 m-2'>
+        <div id="outputs_overview" className='py-2 rounded gap-2'>
             <OutputsOverviewComponent selected={selectedOutput} onSelect={
                 (o) => {
                     if (o !== selectedOutput)

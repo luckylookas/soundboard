@@ -29,7 +29,7 @@ function LibraryComponent({onSelect, selected}: Props) {
             <ul className='flex-col flex-grow'>
                 {
                     collections.map(it => <li
-                        className={`${selectedCollection === it ? 'bg-amber-100 px-2' : 'hover:bg-amber-100 hover:px-2' } flex-1 bg-amber-200 hover:px-2 cursor-pointer`}
+                        className={`${selectedCollection === it ? 'px-2' : 'hover:bg-blue-100 hover:px-2' } flex-1 bg-amber-200 hover:px-2 cursor-pointer`}
                         onClick={() => setSelectedCollection(it)}
                     >{it}</li>)
                 }
