@@ -1,150 +1,118 @@
 package com.luckylookas.soundboard.persistence
 
-import com.luckylookas.soundboard.STATE
 import jakarta.persistence.*
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 
 @Entity
-class Scene(
-
-    @Column(nullable = false)
+class Adventure (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int? = null,
-
-    @Column(unique = true, nullable = false)
+    var id: Long? = null,
+    @Column(unique = true)
     var name: String,
 
-    @OneToMany(cascade = [(CascadeType.ALL)], orphanRemoval = true, fetch = FetchType.EAGER)
-    val sceneMappings: MutableSet<SceneMapping> = HashSet(),
+    @OneToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER, orphanRemoval = true)
+    var scenes: MutableSet<Scene> = mutableSetOf(),
+)
 
-    @OneToMany(cascade = [(CascadeType.ALL)], orphanRemoval = true, fetch = FetchType.EAGER)
-    val hotbar: MutableSet<HotBarEntry> = HashSet()
+@Repository
+interface AdventureRepository : CrudRepository<Adventure, Long> {
+    fun findAllByNameStartsWithOrderByName(name: String): List<Adventure>
+}
 
+@Entity
+class Scene (
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+    @Column(unique = true)
+    var name: String,
+
+    @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY,)
+    var adventure: Adventure,
+    @OneToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER, orphanRemoval = true)
+    var outputs: MutableSet<Output> = mutableSetOf(),
 )
 
 @Entity
-class SoundFileCollection(
-
-    @Column(nullable = false)
+class Output (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int? = null,
-
-    @Column(unique = true, nullable = false)
+    var id: Long? = null,
     var name: String,
-
-    @OneToMany(cascade = [(CascadeType.ALL)], orphanRemoval = true, fetch = FetchType.LAZY)
-    val soundFiles: MutableSet<SoundFile> = HashSet()
-)
-
-@Entity
-class SoundFile(
-    @Column(nullable = false)
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int? = null,
-
-    @Column(unique = true, nullable = false)
-    var name: String,
-
     @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY)
-    val collection: SoundFileCollection,
+    var scene: Scene? = null,
+    val volume: Long = 100,
 
-    @OneToMany(fetch = FetchType.LAZY)
-    val sceneMappings:  MutableSet<SceneMapping> = HashSet(),
-
-    @OneToMany(fetch = FetchType.LAZY, cascade = [(CascadeType.ALL)])
-    val hotbarEntries: MutableSet<HotBarEntry> = HashSet()
-)
-
-@Entity
-class HotBarEntry(
-    @Column(nullable = false)
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int? = null,
-
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    val file: SoundFile,
-    @Column(nullable = false)
-    val loop: Boolean,
-    @Column(nullable = false)
-    val volume: Int,
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    val scene: Scene?,
-)
-
-@Entity
-class SceneMapping(
-
-    @Column(nullable = false)
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int? = null,
-    @Column(nullable = false)
-    val loop: Boolean,
-    @Column(nullable = false)
-    val volume: Int,
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    val scene: Scene,
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    val output: Output,
+    @ManyToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "output_files",
+        joinColumns = [JoinColumn(name = "output_id", referencedColumnName = "id")],
+        inverseJoinColumns = [JoinColumn(name = "file_id", referencedColumnName = "id")]
+    )
+    var files: MutableSet<File> = mutableSetOf(),
 
     @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
-    val file: SoundFile,
+    var playOnStart: File? = null,
+
+    @OneToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    var currentlyControlling: MutableSet<SoundDevice> = mutableSetOf(),
+
+    @ManyToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    @JoinTable(
+        joinColumns = [JoinColumn(name = "output_id", referencedColumnName = "id")],
+        inverseJoinColumns = [JoinColumn(name = "device_id", referencedColumnName = "id")]
+    )
+    var soundDevices: MutableSet<SoundDevice> = mutableSetOf(),
 )
+
+@Repository
+interface OutputRepository : CrudRepository<Output, Long>
 
 @Entity
-class Output(
-
-    @Column(nullable = false)
+class File (
     @Id
-    val mixer: String,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+    @Column(unique = true)
+    var name: String,
+    var loop: Boolean = false,
+    val volume: Long = 100,
 
-    @Column(nullable = false)
-    var label: String? = "",
+    @ManyToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY, mappedBy = "files")
+    var outputs: MutableSet<Output> = mutableSetOf(),
 
-    @Column(nullable = false)
-    var state: STATE = STATE.UNAVAILABLE,
+    @OneToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY)
+    var playOnStart: MutableSet<Output> = mutableSetOf(),
 
-    @OneToMany(orphanRemoval = true, fetch = FetchType.LAZY)
-    val sceneMappings: MutableSet<SceneMapping> = HashSet(),
-
-    @Column(nullable = true)
-    var currentlyPlaying: String?,
-
-
+    @OneToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY)
+    var currentlyPlaying: MutableSet<SoundDevice> = mutableSetOf(),
 )
 
 @Repository
-interface OutputRepository: CrudRepository<Output, String> {
-    fun findByLabelEqualsIgnoreCaseOrMixerEqualsIgnoreCase(label: String, mixer: String): Output?
-    fun findByMixerEqualsIgnoreCase(mixer: String): Output?
-    override fun findAll(): List<Output>
+interface FileRepository : CrudRepository<File, Long> {
+    fun findAllByNameStartsWithOrderByName(name: String): List<File>
+    fun findByNameEqualsIgnoreCase(name: String): File?
 }
+
+@Entity
+class SoundDevice(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+    @Column(unique = true)
+    var name: String,
+    var volume: Long = 100,
+    @ManyToMany(cascade = [CascadeType.ALL], fetch = FetchType.LAZY, mappedBy = "soundDevices")
+    var outputs: MutableSet<Output> = mutableSetOf(),
+
+    @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    var currentlyPlaying: File? = null,
+
+    @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    var currentlyConrtolledBy: Output? = null,
+)
 
 @Repository
-interface SceneRepository: CrudRepository<Scene, Int> {
-  fun findByNameEqualsIgnoreCase(name: String): Scene?
-}
-
-@Repository
-interface SoundFileRepository: CrudRepository<SoundFile, Int> {
-    fun findByNameEqualsIgnoreCaseAndCollectionNameEqualsIgnoreCase(name: String, collection: String): SoundFile?
-    fun findAllByNameStartingWithOrderByNameAsc(name: String): List<SoundFile>
-
-    companion object {
-        fun getTestFile() = SoundFile(collection = SoundFileCollection(name = "test"), name = "test")
-    }
-}
-
-@Repository
-interface SoundFileCollectionRepository: CrudRepository<SoundFileCollection, Int> {
-    fun findByNameEqualsIgnoreCase(name: String): SoundFileCollection?
-    fun existsByName(name: String): Boolean
-    override fun findAll(): List<SoundFileCollection>
-}
+interface SoundDeviceRepository: CrudRepository<SoundDevice, Long>
