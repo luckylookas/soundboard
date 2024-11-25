@@ -3,13 +3,10 @@ import UploadForm from "./UploadForm";
 
 
 function App() {
-    return <div id="body" className='flex justify-center items-start h-full p-2 m-2'>
-        <div className={`h-1/2 w-3/4`}>
+    return <div id="body" className='flex justify-center items-start h-full p-5 bg-emerald-50'>
+        <div className={`h-1/2 w-full`}>
             <UploadForm />
         </div>
-
-
-
     </div>
 }
 

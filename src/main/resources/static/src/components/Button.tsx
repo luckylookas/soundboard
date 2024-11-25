@@ -1,48 +1,87 @@
-import React, {ReactElement} from "react";
+import React, {ReactElement, ReactNode} from "react";
 
-interface ButtonProps {
-    children: ReactElement | string
-    onClick: () => void
-    color: string
-    disabled?: boolean
+export const Box = ({children, title}: {children: ReactNode | undefined, title: string}) => {
+    return <div className={`flex flex-col w-full h-full rounded bg-emerald-50 shadow-lg shadow-neutral-500`}>
+        <div className={'flex w-full flex-grow-0 bg-emerald-500 p-2 rounded-t'}><h1>{title}</h1></div>
+        <div className={`flex flex-col flex-grow w-full justify-between p-2 `}>
+        {children}
+    </div>
+    </div>
 }
 
-export const Button = ({children, onClick, color, disabled}: ButtonProps) => {
-    return <div aria-disabled={!!disabled} onClick={disabled ? () => {} : onClick} className={`
+
+interface HtmlInputProps<T> {
+    onAction: (arg?: T) => void
+    id: string
+    value: T | undefined
+    inputProps: { [key: string]: string }
+}
+
+export const HtmlFileInput = ({id, onAction, inputProps, value}: HtmlInputProps<File>) => {
+    return <div>
+        <label htmlFor={id}
+               className={`flex p-2 drop-shadow-lg rounded bg-emerald-300 hover:bg-emerald-200 text-neutral-800 justify-center items-center`}> {value ? `change file (${value.name})` : 'select file'}</label>
+        <input
+            className={`hidden`}
+            {...inputProps}
+            type='file'
+            name={id}
+            id={id}
+            onChange={e => {
+                if (e.target.files?.length) {
+                    onAction(e.target.files!.item(0)!)
+                }
+            }
+            }/>
+    </div>
+}
+
+
+interface ButtonProps {
+    onClick: () => void
+    disabled?: boolean
+    text: string
+}
+
+
+export const Button = ({text, onClick, disabled}: ButtonProps) => {
+    return <div aria-disabled={!!disabled} onClick={disabled ? () => {
+    } : onClick} className={`
      cursor-${disabled ? 'not-allowed' : 'pointer'}
     select-none
+    p-2
     justify-center
     items-center
-    flex p-2 m-2 
+    flex
     rounded 
     drop-shadow-lg
-    bg-${color}-${disabled ? '950' : '300'} 
-    hover:bg-${color}-${disabled ? '950' : '200'} 
+    bg-emerald-${disabled ? '950' : '300'} 
+    hover:bg-emerald-${disabled ? '950' : '200'} 
     active:bg-${disabled ? '950' : '400'} 
     text-lg 
     text-neutral-${disabled ? '500' : '800'}`}>
-        {children}
+        {text}
     </div>
 }
 
 interface ToggleProps {
     children: ReactElement | string
     onClick: () => void
-    color: string
     checked: boolean
 }
 
-export const Toggle = ({children, onClick, color, checked}: ToggleProps) => {
+export const Toggle = ({children, onClick, checked}: ToggleProps) => {
     return <div onClick={onClick} className={`
     ${checked ? 'shadow-inner' : 'drop-shadow-lg'}
     cursor-pointer
+    p-2
     select-none
     justify-center
     items-center
-    flex p-2 m-2 
+    flex
     rounded 
-    bg-${color}-${checked ? '600' : '300'} 
-    hover:bg-${color}-200
+    bg-emerald-${checked ? '600' : '300'} 
+    hover:bg-emerald-200
     text-lg 
     text-neutral-800`}>
         {children}
@@ -54,19 +93,19 @@ interface SliderProps {
     children: ReactElement | string
     onChange: (next: number) => void
     value: number,
-    color: string
 }
 
-export const Slider = ({children, onChange, color, value}: SliderProps) => {
+export const Slider = ({children, onChange, value}: SliderProps) => {
     return <div className={`
     cursor-pointer
+    p-2
     select-none
     drop-shadow-lg
     justify-center
     items-center
-    flex p-2 m-2`}>
+    flex`}>
         <label htmlFor={"volume"} className={`flex`}>{children}</label>
-        <input className={`bg-neutral-200 w-full accent-${color}-600`} id={"volume"} name='volume' type={"range"} max={100} min={0} value={value}
+        <input className={`bg-neutral-200 w-full accent-emerald-600`} id={"volume"} name='volume' type={"range"} max={100} min={0} value={value}
                onChange={e => onChange(Number.parseInt(e.target.value))}/>
     </div>
 }
