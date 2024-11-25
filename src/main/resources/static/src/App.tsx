@@ -1,13 +1,19 @@
-import React from 'react';
-import UploadForm from "./UploadForm";
+import React, {useState} from 'react';
+import AdventureForm from "./AdventureForm";
+import {Adventure} from "./api";
+import {AdventureContext} from "./Context";
 
 
 function App() {
-    return <div id="body" className='flex justify-center items-start h-full p-5 bg-emerald-50'>
+    const adventure = useState<Adventure|undefined>()
+
+    return <AdventureContext.Provider value={adventure}>
+    <div id="body" className='flex justify-center items-start h-full p-5 bg-emerald-50'>
         <div className={`h-1/2 w-full`}>
-            <UploadForm />
+            <AdventureForm />
         </div>
     </div>
+    </AdventureContext.Provider>
 }
 
 export default App;

@@ -11,7 +11,7 @@ function UploadForm() {
         <div className={'flex flex-col py-2 flex-grow-0'}>
             <Toggle onClick={() => setLoop(old => !old)} checked={loop}>{loop ? 'loop on' : 'loop off'}</Toggle>
             <Slider value={volume} onChange={setVolume}><span className={`text-neutral-800`}>{`volume ${volume}%`}</span></Slider>
-            <HtmlFileInput onAction={setFile} id={"file"} value={file} inputProps={{accept: ".mp3"}} />
+            <HtmlFileInput onChange={setFile} id={"file"} value={file} inputProps={{accept: ".mp3"}} />
         </div>
 
         <div className={'w-full flex flex-grow flex-col justify-start items-start py-2'}>

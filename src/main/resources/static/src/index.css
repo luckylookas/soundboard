@@ -1,6 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+* {
+    @apply transition-all
+}
 
 html, body, #root, #root {
     height: 100%

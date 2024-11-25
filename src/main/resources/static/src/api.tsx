@@ -1,10 +1,36 @@
 
-
 export interface SoundFile {
     name: string,
     loop: boolean,
     volume: number
-    id?: number
+    id: number
+}
+
+export interface SoundDevice {
+    id: number
+    name: string,
+    volume: number
+    currentlyPlaying?: SoundFile
+}
+
+export interface Output {
+    id: number
+    name: string,
+    files: SoundFile[]
+    playOnStart?: SoundFile
+    devices: SoundDevice[]
+}
+
+export interface Scene {
+    id: number
+    name: string,
+    output: Output[]
+}
+
+export interface Adventure {
+    id: number
+    name: string,
+    scenes: Scene[]
 }
 
 export const Library = {
