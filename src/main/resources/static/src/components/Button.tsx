@@ -13,7 +13,7 @@ export const Box = ({children, title, onBack}: {children: ReactNode | undefined,
 export const HtmlFileInput = ({id, onChange, inputProps, value}: HtmlInputProps<File, string>) => {
     return <div>
         <label htmlFor={id}
-               className={`flex p-2 drop-shadow-lg rounded bg-emerald-300 hover:bg-emerald-200 text-neutral-800 justify-center items-center`}> {value ? `change file (${value.name})` : 'select file'}</label>
+               className={`flex p-2     my-2 drop-shadow-lg rounded bg-emerald-300 hover:bg-emerald-200 text-neutral-800 justify-center items-center`}> {value ? `change file (${value.name})` : 'select file'}</label>
         <input
             className={`hidden`}
             {...inputProps}
@@ -39,9 +39,10 @@ interface HtmlInputProps<T, A> {
     inputProps: { [key: string]: string }
 }
 
-export const HtmlSearchInput = ({id, onChange, inputProps, value, additionalValues, onSelect}: HtmlInputProps<string, Adventure>) => {
-    return <div className={`relative w-full`}>
+export const HtmlTextInput = ({id, onChange, inputProps, value, additionalValues, onSelect}: HtmlInputProps<string, Adventure>) => {
+    return <div className={`relative w-full py-2 my-2`}>
         <input
+            value={value}
             className={`w-full relative top-0 left-0 p-2 border-0 outline-0 border-b-2 border-neutral-500 rounded-t`}
             {...inputProps}
             type='text'
@@ -88,13 +89,14 @@ interface ToggleProps {
     children: ReactElement | string
     onClick: () => void
     checked: boolean
+    slim?: boolean
 }
 
-export const Toggle = ({children, onClick, checked}: ToggleProps) => {
+export const Toggle = ({children, onClick, checked, slim}: ToggleProps) => {
     return <div onClick={onClick} className={`
     ${checked ? 'shadow-inner' : 'drop-shadow-lg'}
     cursor-pointer
-    p-2
+    ${slim ? 'p-0': 'p-2'}
     select-none
     justify-center
     items-center

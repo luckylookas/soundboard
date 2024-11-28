@@ -9,7 +9,7 @@ function App() {
 
     return <AdventureContext.Provider value={adventure}>
     <div id="body" className='flex justify-center items-start h-full p-5 bg-emerald-50'>
-        <div className={`h-1/2 w-full`}>
+        <div className={`h-full w-full`}>
             <AdventureForm />
         </div>
     </div>

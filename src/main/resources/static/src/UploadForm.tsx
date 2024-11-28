@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Library} from "./api";
+import {FilesApi} from "./api";
 import {Box, Button, HtmlFileInput, Slider, Toggle} from "./components/Button";
 
 function UploadForm() {
@@ -24,7 +24,7 @@ function UploadForm() {
 
         <div className={'flex flex-col py-2 flex-grow-0 '}>
             <Button disabled={!file} onClick={() => {
-                Library.upload(file!, loop, volume)
+                FilesApi.upload(file!, loop, volume)
                     .then((r) => {
                         setHistory(old => [{name: r.name, success: true} ,...old].slice(0, 10))
                         setFile(undefined)

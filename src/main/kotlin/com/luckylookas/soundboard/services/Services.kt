@@ -64,6 +64,9 @@ class AdventureService(
     fun delete(id: Long) = adventureRepository.deleteById(id)
 
     fun add(id: Long, sceneDto: SceneDto) = adventureRepository.findById(id).orElse(null)?.let { adventure ->
+        if (sceneDto.id != null) {
+            adventure.scenes.removeIf {it.id == sceneDto.id}
+        }
         adventure.scenes.add(mapper.fromDto(sceneDto, adventure))
         mapper.toDto(adventureRepository.save(adventure))
     }
