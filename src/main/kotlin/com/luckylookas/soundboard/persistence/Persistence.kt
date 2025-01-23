@@ -12,7 +12,7 @@ class Adventure (
     @Column(unique = true)
     var name: String,
 
-    @OneToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "adventure", cascade = [(CascadeType.ALL)], orphanRemoval = true)
     var scenes: MutableSet<Scene> = mutableSetOf(),
 )
 
@@ -29,9 +29,9 @@ class Scene (
     @Column(unique = true)
     var name: String,
 
-    @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY,)
+    @ManyToOne
     var adventure: Adventure,
-    @OneToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(orphanRemoval = true, cascade = [(CascadeType.ALL)])
     var outputs: MutableSet<Output> = mutableSetOf(),
 )
 
@@ -41,25 +41,25 @@ class Output (
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
     var name: String,
-    @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY)
+    @ManyToOne
     var scene: Scene? = null,
     val volume: Long = 100,
 
-    @ManyToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "output_files",
         joinColumns = [JoinColumn(name = "output_id", referencedColumnName = "id")],
-        inverseJoinColumns = [JoinColumn(name = "file_id", referencedColumnName = "id")]
+        inverseJoinColumns = [JoinColumn(name = "file_id", referencedColumnName = "id")],
     )
     var files: MutableSet<File> = mutableSetOf(),
 
     @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
     var playOnStart: File? = null,
 
-    @OneToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    @OneToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER, orphanRemoval = false)
     var currentlyControlling: MutableSet<SoundDevice> = mutableSetOf(),
 
-    @ManyToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         joinColumns = [JoinColumn(name = "output_id", referencedColumnName = "id")],
         inverseJoinColumns = [JoinColumn(name = "device_id", referencedColumnName = "id")]
@@ -80,10 +80,10 @@ class File (
     var loop: Boolean = false,
     val volume: Long = 100,
 
-    @ManyToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY, mappedBy = "files")
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "files")
     var outputs: MutableSet<Output> = mutableSetOf(),
 
-    @OneToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "playOnStart", cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY)
     var playOnStart: MutableSet<Output> = mutableSetOf(),
 
     @OneToMany(cascade = [(CascadeType.ALL)], fetch = FetchType.LAZY)
@@ -104,14 +104,14 @@ class SoundDevice(
     @Column(unique = true)
     var name: String,
     var volume: Long = 100,
-    @ManyToMany(cascade = [CascadeType.ALL], fetch = FetchType.LAZY, mappedBy = "soundDevices")
+    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "soundDevices")
     var outputs: MutableSet<Output> = mutableSetOf(),
 
     @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
     var currentlyPlaying: File? = null,
 
     @ManyToOne(cascade = [(CascadeType.ALL)], fetch = FetchType.EAGER)
-    var currentlyConrtolledBy: Output? = null,
+    var currentlyControlledBy: Output? = null,
 )
 
 @Repository

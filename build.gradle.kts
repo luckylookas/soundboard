@@ -25,9 +25,9 @@ repositories {
 }
 
 dependencies {
-
+    implementation("org.hibernate.orm:hibernate-community-dialects")
+    implementation("org.xerial:sqlite-jdbc:3.47.2.0")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    runtimeOnly("com.h2database:h2")
     implementation("com.googlecode.soundlibs:mp3spi:1.9.5.4")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

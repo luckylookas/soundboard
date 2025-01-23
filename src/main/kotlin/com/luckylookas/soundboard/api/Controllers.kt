@@ -44,14 +44,19 @@ class AdventureController(val service: AdventureService) {
     fun assign(@PathVariable id: Long, @RequestBody sceneDto: SceneDto) = service.add(id, sceneDto)
     @DeleteMapping("/{id}/{sceneId}")
     fun remove(@PathVariable id: Long, @PathVariable sceneId: Long) = service.remove(id, sceneId)
-    @PutMapping("/{id}/{outputId}/{fileId}")
-    fun addFile(@PathVariable id: Long, @PathVariable outputId: Long, @PathVariable fileId: Long,
-                @RequestParam(required = false, defaultValue = "false") playOnStart: Boolean) = service.addFile(id, outputId, fileId, playOnStart)
+    @PutMapping("/{id}/{sceneId}/{outputId}/{fileId}")
+    fun addFile(@PathVariable id: Long, @PathVariable sceneId: Long, @PathVariable outputId: Long, @PathVariable fileId: Long,
+                @RequestParam(required = false, defaultValue = "false") playOnStart: Boolean) = service.addFile(id, sceneId, outputId, fileId, playOnStart)
 
-    //remove File
-    //remove output
-    //rename output
-    //rename scene
+    @PutMapping("/{id}/{sceneId}")
+    fun addOutput(@PathVariable id: Long, @PathVariable sceneId: Long, @RequestBody outputDto: OutputDto) = service.assign(id, sceneId, outputDto)
+
+    @DeleteMapping("/{id}/{sceneId}/{outputId}")
+    fun removeOutput(@PathVariable id: Long, @PathVariable sceneId: Long, @PathVariable outputId: Long) = service.remove(id, sceneId,outputId)
+
+    @DeleteMapping("/{id}/{sceneId}/{outputId}/{fileId}")
+    fun removeFile(@PathVariable id: Long,@PathVariable sceneId: Long, @PathVariable outputId: Long, @PathVariable fileId: Long,
+                @RequestParam(required = false, defaultValue = "false") playOnStart: Boolean) = service.removeFile(id, sceneId, outputId, fileId)
 
 }
 
@@ -66,6 +71,7 @@ class GameController(val service: GameService) {
     @DeleteMapping("/{outputId}")
     fun stop(@PathVariable outputId: Long) = service.stop(outputId)
 }
+
 
 @RestController
 @RequestMapping(path = ["/devices"])

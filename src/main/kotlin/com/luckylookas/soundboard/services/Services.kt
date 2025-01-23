@@ -51,7 +51,7 @@ class FileService(val storage: Storage, val fileRepository: FileRepository, val 
 }
 
 @Service
-@Transactional(value = Transactional.TxType.REQUIRES_NEW)
+@Transactional
 class AdventureService(
     val mapper: Mapper,
     val adventureRepository: AdventureRepository,
@@ -72,26 +72,54 @@ class AdventureService(
     }
 
     fun remove(id: Long, sceneId: Long) = adventureRepository.findById(id).orElse(null)?.let {
+
         it.scenes.removeIf { s -> s.id == sceneId }
     }
 
     fun get(id: Long): AdventureDto? = adventureRepository.findById(id).orElse(null)?.let { mapper.toDto(it) }
-    fun addFile(id: Long, outputId: Long, fileId: Long, playOnStart: Boolean): AdventureDto? =
+    fun addFile(id: Long, sceneId: Long, outputId: Long, fileId: Long, playOnStart: Boolean): AdventureDto? =
         adventureRepository.findById(id).orElse(null)?.let { adventure ->
-            adventure.scenes.flatMap { it.outputs }.find { it.id == outputId }?.apply {
+            adventure.scenes.find { it.id == sceneId }?.outputs?.find { it.id == outputId }?.apply {
                 fileRepository.findById(fileId).orElse(null)?.let {
                     files.add(it)
                     if (playOnStart) {
                         this.playOnStart = it
+                    } else if (it == this.playOnStart) {
+                        this.playOnStart = null
                     }
                 }
             }
             mapper.toDto(adventure)
         }
+
+    fun assign(id: Long, sceneId: Long, outputDto: OutputDto) = adventureRepository.findById(id).orElse(null)?.let { adventure ->
+        adventure.scenes.find { it.id == sceneId }?.apply {
+            this.outputs.add(mapper.fromDto(outputDto))
+
+        }
+        mapper.toDto(adventureRepository.save(adventure))
+    }
+
+    fun remove(id: Long, sceneId: Long, outputId: Long) = adventureRepository.findById(id).orElse(null)?.let { adventure ->
+        adventure.scenes.find { it.id == sceneId }?.apply {
+            this.outputs.removeIf { it.id == outputId }
+        }
+        mapper.toDto(adventureRepository.save(adventure))
+    }
+
+    fun removeFile(id: Long, sceneId: Long, outputId: Long, fileId: Long) = adventureRepository.findById(id).orElse(null)?.let { adventure ->
+        adventure.scenes.find { it.id == sceneId }?.outputs?.find { it.id == outputId }?.apply {
+           this.files.removeIf { it.id == fileId }
+            if (this.playOnStart?.id == fileId) {
+                this.playOnStart = null
+            }
+        }
+        mapper.toDto(adventure)
+    }
 }
 
 @Service
-@Transactional(value = Transactional.TxType.REQUIRES_NEW)
+@Transactional
 class GameService(val outputRepository: OutputRepository, val fileRepository: FileRepository, val mp3Player: Mp3Player, val storage: Storage, val deviceService: DeviceService) {
 
     fun play(outputId: Long, fileId: Long?) {
@@ -100,7 +128,7 @@ class GameService(val outputRepository: OutputRepository, val fileRepository: Fi
                 (fileId ?: output.playOnStart?.id)?.also { resolvedFileId ->
                     fileRepository.findById(resolvedFileId).orElse(null)?.also {
                         device.currentlyPlaying = it
-                        device.currentlyConrtolledBy = output
+                        device.currentlyControlledBy = output
                         mp3Player.play(it.name, device.name, storage.get(it.name)!!, device.volume * (output.volume/100) * (it.volume/100), false) { deviceService.stop(device.id!!) }
                     }
                 }
@@ -118,7 +146,7 @@ class GameService(val outputRepository: OutputRepository, val fileRepository: Fi
 }
 
 @Service
-@Transactional(value = Transactional.TxType.REQUIRES_NEW)
+@Transactional(value = Transactional.TxType.REQUIRED)
 class DeviceService(
     val mp3Player: Mp3Player,
     val mapper: Mapper,
@@ -136,11 +164,17 @@ class DeviceService(
     fun rescan() {
         val mixers = audioSystem.getMixerInfo()
         val devices = soundDeviceRepository.findAll()
+
+        outputRepository.findAll().forEach { output ->
+            output.soundDevices.clear()
+        }
+
         // remove devices where the filter does no longer exist
         soundDeviceRepository.deleteAll(devices.filter { device -> !mixers.map { it.name }.contains(device.name) })
         // create devices for new mixers
         soundDeviceRepository.saveAll(mixers.filter { mixer -> !devices.map { it.name }.contains(mixer.name) }
             .map { SoundDevice(name = it.name) })
+
     }
 
     fun assign(deviceId: Long, outputId: Long) {
@@ -167,7 +201,7 @@ class DeviceService(
         soundDeviceRepository.findById(deviceId).ifPresent { device ->
             fileRepository.findByNameEqualsIgnoreCase("test")?.also {
                 device.currentlyPlaying = it
-                device.currentlyConrtolledBy = null
+                device.currentlyControlledBy = null
                 mp3Player.play(it.name, device.name, storage.get(it.name)!!, device.volume * (it.volume/100), it.loop) { this.stop(deviceId) }
             }
         }
@@ -176,15 +210,16 @@ class DeviceService(
     fun stop(deviceId: Long) {
         soundDeviceRepository.findById(deviceId).ifPresent { device ->
             device.currentlyPlaying = null
-            device.currentlyConrtolledBy = null
+            device.currentlyControlledBy = null
             mp3Player.stop(device.name)
+            soundDeviceRepository.save(device)
         }
     }
 
     fun volume(deviceId: Long, volume: Long) {
         soundDeviceRepository.findById(deviceId).ifPresent { device ->
             device.volume = volume
-            mp3Player.setVolume(device.name, volume * ((device.currentlyConrtolledBy?.volume?:100)/100) * ((device.currentlyPlaying?.volume ?: 100)/100))
+            mp3Player.setVolume(device.name, volume * ((device.currentlyControlledBy?.volume?:100)/100) * ((device.currentlyPlaying?.volume ?: 100)/100))
         }
     }
 

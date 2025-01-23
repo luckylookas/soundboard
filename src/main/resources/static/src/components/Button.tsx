@@ -1,10 +1,10 @@
-import React, {ReactElement, ReactNode} from "react";
+import React, {ReactElement, ReactNode, useMemo} from "react";
 import {Adventure} from "../api";
 
 export const Box = ({children, title, onBack}: {children: ReactNode | undefined, title: string, onBack?: () => void}) => {
     return <div className={`flex flex-col w-full h-full rounded bg-emerald-50 shadow-lg shadow-neutral-500`}>
-        <div className={'flex w-full flex-grow-0 bg-emerald-500 p-2 rounded-t justify-between items-center'}><h1>{title}</h1><div className={'rounded m-1 p-1 bg-rose-500 cursor-pointer select-none flex justify-center items-center'} onClick={onBack}>{`back`}</div></div>
-        <div className={`flex flex-col flex-grow w-full justify-between p-2 `}>
+        <div className={'flex w-full flex-grow-0 bg-emerald-500 rounded-t p-2 justify-between items-center'}><h1>{title}</h1><div className={'rounded m-1 p-1 bg-rose-500 cursor-pointer select-none flex justify-center items-center'} onClick={onBack}>{`back`}</div></div>
+        <div className={`flex flex-col flex-grow w-full justify-between `}>
         {children}
     </div>
     </div>
@@ -13,7 +13,7 @@ export const Box = ({children, title, onBack}: {children: ReactNode | undefined,
 export const HtmlFileInput = ({id, onChange, inputProps, value}: HtmlInputProps<File, string>) => {
     return <div>
         <label htmlFor={id}
-               className={`flex p-2     my-2 drop-shadow-lg rounded bg-emerald-300 hover:bg-emerald-200 text-neutral-800 justify-center items-center`}> {value ? `change file (${value.name})` : 'select file'}</label>
+               className={`flex p-2     my-2 drop-shadow-lg rounded bg-emerald-300 hover:bg-emerald text-neutral-800 justify-center items-center`}> {value ? `change file (${value.name})` : 'select file'}</label>
         <input
             className={`hidden`}
             {...inputProps}
@@ -61,11 +61,15 @@ export const HtmlTextInput = ({id, onChange, inputProps, value, additionalValues
 interface ButtonProps {
     onClick: () => void
     disabled?: boolean
+    accent?: boolean
     text: string
 }
 
 
-export const Button = ({text, onClick, disabled}: ButtonProps) => {
+export const Button = ({text, onClick, disabled, accent}: ButtonProps) => {
+
+    const color = useMemo(() => accent ? 'rose': 'emerald', [accent]);
+
     return <div aria-disabled={!!disabled} onClick={disabled ? () => {
     } : onClick} className={`
      cursor-${disabled ? 'not-allowed' : 'pointer'}
@@ -76,10 +80,11 @@ export const Button = ({text, onClick, disabled}: ButtonProps) => {
     flex
     rounded 
     drop-shadow-lg
-    bg-emerald-${disabled ? '950' : '300'} 
-    hover:bg-emerald-${disabled ? '950' : '200'} 
+    bg-${color}-${disabled ? '950' : '300'} 
+    hover:bg-${color}-${disabled ? '950' : '200'} 
     active:bg-${disabled ? '950' : '400'} 
     text-lg 
+    flex-grow
     text-neutral-${disabled ? '500' : '800'}`}>
         {text}
     </div>
@@ -101,6 +106,7 @@ export const Toggle = ({children, onClick, checked, slim}: ToggleProps) => {
     justify-center
     items-center
     flex
+    flex-grow
     rounded 
     bg-emerald-${checked ? '600' : '300'} 
     hover:bg-emerald-200
