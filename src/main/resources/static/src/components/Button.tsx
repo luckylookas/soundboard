@@ -2,8 +2,8 @@ import React, {ReactElement, ReactNode, useMemo} from "react";
 import {Adventure} from "../api";
 
 export const Box = ({children, title, onBack}: {children: ReactNode | undefined, title: string, onBack?: () => void}) => {
-    return <div className={`flex flex-col w-full h-full rounded bg-emerald-50 shadow-lg shadow-neutral-500`}>
-        <div className={'flex w-full flex-grow-0 bg-emerald-500 rounded-t p-2 justify-between items-center'}><h1>{title}</h1><div className={'rounded m-1 p-1 bg-rose-500 cursor-pointer select-none flex justify-center items-center'} onClick={onBack}>{`back`}</div></div>
+    return <div className={`flex flex-col w-full h-full rounded bg-neutral-800 shadow-lg shadow-neutral-500`}>
+        <div className={'flex w-full flex-grow-0 bg-emerald-500 rounded-t p-2 justify-between items-center'}><h1 className={`text-xl text-neutral-100`}>{title}</h1><div className={'rounded m-1 p-1 bg-rose-500 cursor-pointer select-none flex justify-center items-center'} onClick={onBack}>{`back`}</div></div>
         <div className={`flex flex-col flex-grow w-full justify-between `}>
         {children}
     </div>
@@ -43,13 +43,13 @@ export const HtmlTextInput = ({id, onChange, inputProps, value, additionalValues
     return <div className={`relative w-full py-2 my-2`}>
         <input
             value={value}
-            className={`w-full relative top-0 left-0 p-2 border-0 outline-0 border-b-2 border-neutral-500 rounded-t`}
+            className={`w-full relative top-0 left-0 p-2 border-0 outline-0 border-b-2 border-neutral-500 bg-neutral-500 text-neutral-100`}
             {...inputProps}
             type='text'
             name={id}
             id={id}
             onChange={e => onChange(e.target.value)}/>
-        <label htmlFor={id} className={`absolute left-2   ${!!value ? 'text-xs top-0 text-neutral-200' : 'text-lg top-1 text-neutral-500'}`}>{id}</label>
+        <label htmlFor={id} className={`absolute left-2   ${!!value ? 'text-xs top-0 text-neutral-100' : 'text-lg top-4 text-neutral-100'}`}>{id}</label>
         <div className={`shadow shadow-neutral-600 rounded-b`}>
             {additionalValues?.map((v, i) => <div
                 onClick={() => onSelect ? onSelect(v) : () => {}}
@@ -80,8 +80,8 @@ export const Button = ({text, onClick, disabled, accent}: ButtonProps) => {
     flex
     rounded 
     drop-shadow-lg
-    bg-${color}-${disabled ? '950' : '300'} 
-    hover:bg-${color}-${disabled ? '950' : '200'} 
+    bg-${color}-${disabled ? '950' : '500'} 
+    hover:bg-${color}-${disabled ? '950' : '700'} 
     active:bg-${disabled ? '950' : '400'} 
     text-lg 
     flex-grow

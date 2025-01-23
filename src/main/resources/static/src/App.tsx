@@ -23,8 +23,8 @@ function App() {
 
     return <BrowserRouter>
         <AdventureContext.Provider value={context}>
-        <div id="body" className='flex justify-center items-start h-full p-5 bg-emerald-50'>
-            <div className={`h-full w-full`}>
+        <div id="body" className='flex justify-center items-start h-full p-5 bg-neutral-800'>
+            <div className={`h-full w-full text-neutral-100`}>
                 <Routes>
                     <Route path={"/upload"} element={<UploadForm />}></Route>
                     <Route index path={"/"} element={<AdventureList />} />

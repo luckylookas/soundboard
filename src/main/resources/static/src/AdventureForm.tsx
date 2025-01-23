@@ -17,7 +17,7 @@ export function AdventureList() {
     return <Box onBack={() => {
     }} title={"Adventures"}>
         <div className={`flex flex-col gap-2`}>
-        {list.map(it => <NavLink className={`flex font-bold text-xl items-center justify-center p-1 border-b-2 border-neutral-800 hover:bg-emerald-200`} to={`/${it.id}`}>{it.name}</NavLink>)}
+        {list.map(it => <NavLink className={`bg-neutral-700 text-neutral-100 flex text-xl items-center justify-center border-neutral-800 hover:bg-emerald-800`} to={`/${it.id}`}>{it.name}</NavLink>)}
         <div className={`mt-2 p-1 border-b-2 border-neutral-800 flex flex-row gap-2`}>
             <HtmlTextInput onChange={(e) => setName(e ?? '')} id={'adventureName'} value={name} inputProps={{}} />
             <Button disabled={!name} onClick={() => AdventureApi.create(name).then((r) => navigate(`/${r.id}`))} text={'create'} />
@@ -79,14 +79,14 @@ function AdventureComponent() {
     return <div className={`flex flex-row w-full h-full`}>
         <div className={'flex basis-1/4 flex-col border-r-2 border-neutral-800'}>
             {context?.adventure?.scenes?.map(s =>
-               <div className={`border-b-2 border-neutral-800 flex flex-row`}>
+               <div className={`flex flex-row`}>
                    <NavLink to={`/${context?.adventure?.id}/${s.id}`} className={`
-                ${context?.selectedSceneId && context.selectedSceneId === s.id ? `bg-rose-200` : `cursor-pointer hover:bg-emerald-200`}
+                ${context?.selectedSceneId && context.selectedSceneId === s.id ? `bg-emerald-500` : `cursor-pointer hover:bg-emerald-700`}
                 w-full p-2`}>{s.name}</NavLink>
                    <div onClick={() => AdventureApi.removeScene(context?.adventure?.id!, s.id!).then(() => context?.refresh!())} className={`border-neutral-800 border-l-2 cursor-pointer bg-rose-800 p-2 text-xl font-bold hover:bg-rose-400`}>X</div>
                </div> )}
 
-            <div className={`border-b-2 border-neutral-800`}>
+            <div className={``}>
                 <HtmlTextInput onChange={(e) => setNewSceneName(e ?? '')} id={'scene'} value={newSceneName} inputProps={{}} />
                 <Button disabled={!newSceneName} onClick={() => AdventureApi.createScene(context?.adventure?.id!, {
                     name: newSceneName,
@@ -98,14 +98,15 @@ function AdventureComponent() {
 
             </div>
         </div>
-        <div className={`flex basis-3/4 flex-col p-1`}>
+        <div className={`flex basis-3/4 flex-col`}>
             {[context?.adventure?.scenes?.find(it => it.id === context?.selectedSceneId)].filter(it => !!it).map(it =>
                 <div>
 
-                    <div className={`text-xl font-bold`}>{it!.name}</div>
-                    <div>
+                    <div className={`text-2xl flex font-bold text-neutral-100 w-full justify-center align-middle`}>{it!.name}</div>
+
+                    <div className={``}>
                         {it!.outputs?.map(o => <div
-                            className={`w-full my-2 border-b-2 border-neutral-200 drop-shadow-lg bg-neutral-50 flex flex-col`}
+                            className={`w-full my-2 drop-shadow-lg flex flex-col bg-neutral-500`}
                             onDrop={(e) => {
                                 if (e.dataTransfer.getData('device')) {
                                     DevicesApi.assign(Number.parseInt(e.dataTransfer.getData('device'), 10), o.id!)
@@ -122,7 +123,7 @@ function AdventureComponent() {
                             }}
                             onDragEnter={() => setDragOver(o)}
                             onDragLeave={() => setDragOver(undefined)}>
-                            <div className={`flex flex-row w-full justify-between pointer-events-none bg-neutral-100`}>
+                            <div className={`flex flex-row w-full justify-between pointer-events-none bg-emerald-500`}>
                                 <div
                                     className={`flex justify-center ${draggedDevice ? 'pointer-events-none' : 'pointer-events-auto'}
                                      p-1 
@@ -133,7 +134,7 @@ function AdventureComponent() {
                                     onClick={() => GameApi.stop(o.id!).then(() => context?.refresh!())}>stop
                                 </div>
 
-                                <div className={`p-1 pointer-events-none text-xl`}>{o.name}</div>
+                                <div className={`p-1 pointer-events-none text-xl `}>{o.name}</div>
 
 
                                 <div
@@ -141,13 +142,13 @@ function AdventureComponent() {
                                     {o.devices?.map(d =>
                                         <div
                                             onClick={() => DevicesApi.unassign(d.id, o.id!).then(() => context?.refresh!())}
-                                            className={`border-l-2 border-r-2 bg-neutral-100 border-neutral-200 p-1 hover:line-through hover:bg-rose-200 cursor-pointer ${draggedDevice || draggedFile ? 'pointer-events-none' : 'pointer-events-auto'} hover:line-through`}
+                                            className={`border-l-2 border-r-2 border-neutral-200 p-1 hover:line-through hover:bg-rose-200 cursor-pointer ${draggedDevice || draggedFile ? 'pointer-events-none' : 'pointer-events-auto'} hover:line-through`}
                                         >{d.name}</div>)}
                                     {draggedDevice && dragOver === o && <div
                                         className={`p-1 pointer-events-none`}>{draggedDevice.name}</div>}
 
                                     <div
-                                        className={`cursor-pointer  p-1 px-2 border-r-2 border-l-2 border-neutral-200 hover:bg-rose-200 hover:border-rose-500 ${draggedDevice || draggedFile ? 'pointer-events-none' : 'pointer-events-auto'}`}
+                                        className={`cursor-pointer px-2 border-r-2 border-l-2 border-neutral-200 hover:bg-rose-200 hover:border-rose-500 ${draggedDevice || draggedFile ? 'pointer-events-none' : 'pointer-events-auto'}`}
                                         onClick={() => AdventureApi.removeOutput(context?.adventure!.id!, it!.id!, o.id!).then(() => context?.refresh!())}>X
                                     </div>
                                 </div>
@@ -156,11 +157,11 @@ function AdventureComponent() {
 
                             <div className={`${draggedFile || draggedDevice ? `pointer-events-none` : ''}`}>
                                 {draggedFile && dragOver === o && <div
-                                    className={`pointer-events-none`}>{draggedFile.name}</div>}
+                                    className={`pointer-events-none flex w-full justify-center align-middle text-neutral-100`}>add {draggedFile.name}</div>}
 
                                 {o.files?.map(f =>
                                     <div
-                                        className={`${draggedFile || draggedDevice ? `pointer-events-none` : ''} justify-between flex-row flex border-b-2  mt-1 select-none`}>
+                                        className={`${draggedFile || draggedDevice ? `pointer-events-none` : ''} justify-between flex-row flex select-none`}>
 
 
                                         <div
@@ -201,7 +202,7 @@ function AdventureComponent() {
                                     </div>)}
                             </div>
                         </div>)}
-                        <div className={`border-b-2 border-neutral-800`}>
+                        <div className={``}>
                             <HtmlTextInput onChange={(e) => setNewOutputName(e ?? '')} id={'output'} value={newOutputName}
                                            inputProps={{}}/>
                             <Button disabled={!newOutputName}
@@ -220,7 +221,7 @@ function AdventureComponent() {
         <div className={'flex basis-1/4 flex-col p-1 border-l-2 border-neutral-800'}>
 
             <div className={`flex flex-col w-full h-1/4 overflow-y-scroll`}>
-                <div className={`cursor-pointer bg-rose-400 hover:bg-rose-200 w-full p-2 `}
+                <div className={`cursor-pointer bg-rose-500 hover:bg-rose-400 w-full p-2 `}
                      onClick={() => DevicesApi.rescan().then(DevicesApi.list).then(it => setContext(prev => ({
                          ...prev,
                          devices: it
@@ -229,14 +230,14 @@ function AdventureComponent() {
                 {context?.devices?.map(d => <div draggable={true} onDragStart={(e) => {
                     e.dataTransfer.setData('device', `${d.id}`);
                     setDraggedDevice(d)
-                }} onDragEnd={() => {setDraggedDevice(undefined)}} className={`dra cursor-grab bg-emerald-200 hover:bg-emerald-200 w-full p-2 `}>{d.name} ({d.currentlyPlaying?.name ?? 'idle'})</div>)}
+                }} onDragEnd={() => {setDraggedDevice(undefined)}} className={`dra cursor-grab bg-emerald-500 hover:bg-emerald-700 w-full p-2 `}>{d.name} ({d.currentlyPlaying?.name ?? 'idle'})</div>)}
             </div>
-            <div className={`flex flex-col w-full h-full border-neutral-200 border-t-2 overflow-y-scroll`}>
-                <div className={`cursor-pointer bg-rose-400 hover:bg-rose-200 w-full p-2`}>rescan (?)</div>
+            <div className={`flex flex-col w-full h-full border-neutral-500 border-t-2 overflow-y-scroll`}>
+                <div className={`cursor-pointer bg-rose-500 hover:bg-rose-400 w-full p-2`}>rescan (?)</div>
                 {context?.files?.map(f => <div draggable={true} onDragStart={(e) => {
                     e.dataTransfer.setData('file', `${f.id}`);
                     setDraggedFile(f)
-                }} onDragEnd={() => {setDraggedFile(undefined)}} className={`dra cursor-grab bg-emerald-200 hover:bg-emerald-200 w-full p-2`}>{f.name}</div>)}
+                }} onDragEnd={() => {setDraggedFile(undefined)}} className={`dra cursor-grab bg-emerald-500 hover:bg-emerald-700 w-full p-2`}>{f.name}</div>)}
 
             </div>
         </div>
