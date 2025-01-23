@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {Box, Button, HtmlTextInput} from "./components/Button";
+import {Box, Button, HtmlTextInput, Slider} from "./components/Button";
 import {AdventureContext} from "./Context";
 import {Adventure, AdventureApi, DevicesApi, FilesApi, GameApi, Output, SoundDevice, SoundFile} from "./api";
 import {NavLink, useNavigate, useParams} from "react-router";
@@ -133,6 +133,7 @@ function AdventureComponent() {
                                      hover:bg-rose-200 cursor-pointer`}
                                     onClick={() => GameApi.stop(o.id!).then(() => context?.refresh!())}>stop
                                 </div>
+                                <Slider onChange={(v) => AdventureApi.adjustVolume(context?.adventure!.id!, it!.id!, o.id!, v).then(() => context?.refresh!())} value={o.volume} >{''}</Slider>
 
                                 <div className={`p-1 pointer-events-none text-xl `}>{o.name}</div>
 
@@ -209,6 +210,7 @@ function AdventureComponent() {
                                     onClick={() => AdventureApi.addOutput(context?.adventure?.id!, it!.id!, {
                                         devices: [],
                                         files: [],
+                                        volume: 100,
                                         name: newOutputName
                                     })
                                         .then(() => context?.refresh!())
@@ -233,7 +235,8 @@ function AdventureComponent() {
                 }} onDragEnd={() => {setDraggedDevice(undefined)}} className={`dra cursor-grab bg-emerald-500 hover:bg-emerald-700 w-full p-2 `}>{d.name} ({d.currentlyPlaying?.name ?? 'idle'})</div>)}
             </div>
             <div className={`flex flex-col w-full h-full border-neutral-500 border-t-2 overflow-y-scroll`}>
-                <div className={`cursor-pointer bg-rose-500 hover:bg-rose-400 w-full p-2`}>rescan (?)</div>
+                <div className={`cursor-pointer bg-rose-500 hover:bg-rose-400 w-full p-2`} onClick={() =>         FilesApi.find("").then(it => setContext(prev => ({...prev, files: it})))
+                }>rescan (?)</div>
                 {context?.files?.map(f => <div draggable={true} onDragStart={(e) => {
                     e.dataTransfer.setData('file', `${f.id}`);
                     setDraggedFile(f)

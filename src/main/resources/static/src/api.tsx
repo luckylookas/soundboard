@@ -16,6 +16,7 @@ export interface Output {
     id?: number
     name: string,
     files: SoundFile[]
+    volume: number,
     playOnStart?: SoundFile
     devices: SoundDevice[]
 }
@@ -110,6 +111,12 @@ export const AdventureApi = {
 
     addFile: async (id: number, sceneId: number, outputId: number, fileId: number, playOnStart: boolean): Promise<Adventure[]> => {
         return await fetch(`/adventures/${id}/${sceneId}/${outputId}/${fileId}?playOnStart=${playOnStart}`,
+            {method: "PUT"}
+        ).then(it => it.json())
+    },
+
+    adjustVolume: async (id: number, sceneId: number, outputId: number, volume: number): Promise<Adventure[]> => {
+        return await fetch(`/adventures/${id}/${sceneId}/${outputId}/volume/adjust?volume=${volume}`,
             {method: "PUT"}
         ).then(it => it.json())
     },

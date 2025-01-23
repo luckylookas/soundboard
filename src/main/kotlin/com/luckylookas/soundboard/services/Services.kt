@@ -33,6 +33,8 @@ class FileService(val storage: Storage, val fileRepository: FileRepository, val 
                 volume = volume
             )
         )).let { file ->
+            file.loop = loop
+            file.volume = volume
             storage.save(name, stream).let {
                 mapper.toDto(File(id = file.id, name = it, loop = file.loop, volume = file.volume))
             }
@@ -116,6 +118,16 @@ class AdventureService(
         }
         mapper.toDto(adventure)
     }
+
+    fun adjustVolume(id: Long, sceneId: Long, outputId: Long, volume: Long) = adventureRepository.findById(id).orElse(null)?.let { adventure ->
+        adventure.scenes.find { it.id == sceneId }?.apply {
+            this.outputs.find { it.id == outputId }?.apply {
+
+                this.volume = Math.clamp(volume, 0, 100).toLong()
+            }
+        }
+        mapper.toDto(adventureRepository.save(adventure))
+    }
 }
 
 @Service
@@ -129,7 +141,7 @@ class GameService(val outputRepository: OutputRepository, val fileRepository: Fi
                     fileRepository.findById(resolvedFileId).orElse(null)?.also {
                         device.currentlyPlaying = it
                         device.currentlyControlledBy = output
-                        mp3Player.play(it.name, device.name, storage.get(it.name)!!, device.volume * (output.volume/100) * (it.volume/100), false) { deviceService.stop(device.id!!) }
+                        mp3Player.play(it.name, device.name, storage.get(it.name)!!, (100.0 * (device.volume.toDouble()/100) * (output.volume.toDouble()/100) * (it.volume.toDouble()/100)).toLong(), it.loop) { deviceService.stop(device.id!!) }
                     }
                 }
             }
@@ -219,7 +231,7 @@ class DeviceService(
     fun volume(deviceId: Long, volume: Long) {
         soundDeviceRepository.findById(deviceId).ifPresent { device ->
             device.volume = volume
-            mp3Player.setVolume(device.name, volume * ((device.currentlyControlledBy?.volume?:100)/100) * ((device.currentlyPlaying?.volume ?: 100)/100))
+            mp3Player.lineVolume(device.name, volume * ((device.currentlyControlledBy?.volume?:100)/100) * ((device.currentlyPlaying?.volume ?: 100)/100))
         }
     }
 

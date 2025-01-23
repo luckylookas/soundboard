@@ -44,6 +44,11 @@ class AdventureController(val service: AdventureService) {
     fun assign(@PathVariable id: Long, @RequestBody sceneDto: SceneDto) = service.add(id, sceneDto)
     @DeleteMapping("/{id}/{sceneId}")
     fun remove(@PathVariable id: Long, @PathVariable sceneId: Long) = service.remove(id, sceneId)
+
+    @PutMapping("/{id}/{sceneId}/{outputId}/volume/adjust")
+    fun adjustVolume(@PathVariable id: Long, @PathVariable sceneId: Long, @PathVariable outputId: Long, @RequestParam volume: Long ) = service.adjustVolume(id, sceneId,outputId, volume)
+
+
     @PutMapping("/{id}/{sceneId}/{outputId}/{fileId}")
     fun addFile(@PathVariable id: Long, @PathVariable sceneId: Long, @PathVariable outputId: Long, @PathVariable fileId: Long,
                 @RequestParam(required = false, defaultValue = "false") playOnStart: Boolean) = service.addFile(id, sceneId, outputId, fileId, playOnStart)
@@ -57,6 +62,8 @@ class AdventureController(val service: AdventureService) {
     @DeleteMapping("/{id}/{sceneId}/{outputId}/{fileId}")
     fun removeFile(@PathVariable id: Long,@PathVariable sceneId: Long, @PathVariable outputId: Long, @PathVariable fileId: Long,
                 @RequestParam(required = false, defaultValue = "false") playOnStart: Boolean) = service.removeFile(id, sceneId, outputId, fileId)
+
+
 
 }
 

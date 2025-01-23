@@ -43,7 +43,7 @@ class Output (
     var name: String,
     @ManyToOne
     var scene: Scene? = null,
-    val volume: Long = 100,
+    var volume: Long = 100,
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -78,7 +78,7 @@ class File (
     @Column(unique = true)
     var name: String,
     var loop: Boolean = false,
-    val volume: Long = 100,
+    var volume: Long = 100,
 
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "files")
     var outputs: MutableSet<Output> = mutableSetOf(),

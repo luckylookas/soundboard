@@ -10,7 +10,13 @@ fun encodeMixerName(name: String): String = name.replace(" ", "").lowercase()
 @Component
 class Mp3Player(val audioSystem: AudioSystem, val async: Async) {
 
-    fun setVolume(output: String, percent: Long) {
+    fun clipVolume(clip: Clip, percent: Long) {
+        (clip.getControl(FloatControl.Type.MASTER_GAIN) as FloatControl).apply {
+            this.value = this.minimum + ((this.maximum - this.minimum) * (percent/100F)).toInt()
+        }
+    }
+
+    fun lineVolume(output: String, percent: Long) {
         audioSystem.getMixerInfo().firstOrNull { encodeMixerName(it.name) == encodeMixerName(output) }?.also { mixer ->
             audioSystem.getMixer(mixer).sourceLines.map { (it.getControl(FloatControl.Type.MASTER_GAIN) as FloatControl) }
                 .forEach { it.value = it.minimum + ((it.maximum - it.minimum) * (percent / 100F)) }
@@ -23,9 +29,9 @@ class Mp3Player(val audioSystem: AudioSystem, val async: Async) {
                 async.dispatch {
                     getAudioInputStream(blob).use { stream ->
                         stop(mixer.name)
-                        setVolume(output, volume)
                         val clip = audioSystem.getClip(mixer)
                         clip.open(stream)
+                        clipVolume(clip = clip, percent = volume)
                         clip.loop(if (loop) Clip.LOOP_CONTINUOUSLY else 0)
                         clip.addLineListener { event ->
                             if (event.type == LineEvent.Type.CLOSE) {

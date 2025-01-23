@@ -127,6 +127,7 @@ export const Slider = ({children, onChange, value}: SliderProps) => {
     return <div className={`
     cursor-pointer
     p-2
+    pointer-events-auto
     select-none
     drop-shadow-lg
     justify-center
